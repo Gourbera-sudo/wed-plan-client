@@ -10,7 +10,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 # wedplan-client
 
-Early-stage Next.js 16.4.6 App Router app (React 19.3, TypeScript strict, Tailwind CSS 4, Turbopack). What exists today: the navbar with a demo session, a single-section home banner (`src/app/page.tsx`), and thin stub routes `/services`, `/sign-in`, `/sign-up`, `/dashboard`, `/profile`. `README.md` is stock `create-next-app` boilerplate — it points at `app/page.tsx`, while the real path is `src/app/page.tsx`. Trust config over the README.
+Early-stage Next.js 16.4.6 App Router app (React 19.3, TypeScript strict, Tailwind CSS 4, Turbopack): a navbar with a demo session and thin stub routes. `README.md` is stock `create-next-app` boilerplate — it points at `app/page.tsx`, while the real root is `src/app`. Trust config over the README.
 
 ## Commands
 
@@ -26,14 +26,13 @@ Early-stage Next.js 16.4.6 App Router app (React 19.3, TypeScript strict, Tailwi
 - Pages/layouts use Next-generated global prop types (`LayoutProps<"/">`, `PageProps<...>`). Use them; do not import or hand-roll equivalents.
 - UI primitives live in `src/components/ui` — shadcn **base-nova** (`style` in `components.json`), built on Base UI (`@base-ui/react`), not Radix. Base UI uses `render={<Element />}` where Radix uses `asChild`. `cn` is imported from the `cn` package (every component does this; `src/lib/utils.ts` only re-exports it, and nothing imports `@/lib/utils`).
 - For links styled as buttons, use `ButtonLink` (`src/components/button-link.tsx`), not `Button render={<Link/>}`: Base UI's Button forces `role="button"` on anchors and warns about non-native buttons.
-- `src/lib/auth.ts` is a demo session store (localStorage + `useSession` + `signIn`/`signOut`, cross-tab `storage` sync, `getServerSnapshot()` returns `null`, so server components always render signed out). Replace its internals when real auth arrives. Navbar routes: `/`, `/services`, `/sign-in`, `/sign-up`, `/dashboard`, `/profile`.
-- The home page is deliberately banner-only: one `<section>` with a photo strip above the copy below `lg`, and from `lg` a full-bleed photo with a solid cream copy panel over it. No gradients, no footer, no marketing sections — the brief is navbar + banner, so don't add any.
+- `src/lib/auth.ts` is a demo session store (localStorage + `useSyncExternalStore` via `useSession`, `signIn`/`signOut`, cross-tab `storage` sync). `getServerSnapshot()` returns `null`, so server components always render signed out; client pages that gate on the session (`/dashboard`, `/profile`) also call `useHydrated()` (`src/hooks/use-hydrated.ts`) to avoid a signed-out flash. Replace the store's internals when real auth arrives.
 
 ## Framework quirks
 
 - `next.config.ts` enables `cacheComponents` and `partialPrefetching`. Uncached data reads or `connection()` outside `<Suspense>` block prerendering; fix with `"use cache"`, a `<Suspense>` boundary, or `export const instant = false` (the dev/build error output names the trade-offs).
-- `experimental.agentFeedback` is enabled, so `next dev` writes and restores managed instruction blocks in this file (`syncAgentFeedbackForDev` / `buildAgentFeedbackBlock` in `node_modules/next/dist/server/lib/`). Leave the `BEGIN:nextjs-agent-rules` and `BEGIN:nextjs-agent-feedback` regions untouched — Next rewrites them, and the feedback block tells you when to run the reporting pass. Hand-written content goes outside those markers.
-- Tailwind 4 is loaded by a Turbopack rule (`@tailwindcss/turbopack`), not PostCSS, and there is no `tailwind.config.js`. Theme tokens live in the `@theme inline` block in `src/app/globals.css`; keep `--font-sans`/`--font-mono` pointing at the `next/font` variables (`--font-geist-*`). A self-referential value there silently drops every generated color utility.
+- `experimental.agentFeedback` is enabled: `next dev` writes/restores managed blocks here (`syncAgentFeedbackForDev` / `buildAgentFeedbackBlock` in `node_modules/next/dist/server/lib/`). The rules block is compared byte-for-byte — never edit it. If a `BEGIN:nextjs-agent-feedback` block appears, follow its reporting pass before the final response. Keep hand-written content outside both markers.
+- Tailwind 4 is loaded by a Turbopack rule (`@tailwindcss/turbopack`), not PostCSS, and there is no `tailwind.config.js`. Theme tokens live in the `@theme inline` block in `src/app/globals.css`: keep `--font-sans`/`--font-mono` pointing at the `next/font` vars (`--font-geist-*`) and `--font-heading` at Playfair. A self-referential value there silently drops every generated color utility.
 - Replacing an asset at the same path under `public/` does **not** refresh the dev image optimizer: `/_next/image` is cached by URL and kept serving the previous bytes after the file was overwritten (a `?v=` query on the `src` is rejected with 400). Save a replacement under a **new filename** and update the `<Image src>` accordingly; anything you drop in `public/` stays served until you delete it.
 - `/_next/mcp` exposes the running dev server's routes, logs, and compilation issues for checking edits without a full build. Bundled version-matched docs live in `node_modules/next/dist/docs/` (start with `01-app/02-guides/ai-agents.md` and `01-app/01-getting-started/08-caching.md`).
 

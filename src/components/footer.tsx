@@ -15,7 +15,7 @@ const FOOTER_LINKS = [
   { href: "/", label: "Home" },
   { href: "/services", label: "Browse Services" },
   { href: "/dashboard", label: "Dashboard" },
-  { href: "/sign-in", label: "Sign In" },
+  { href: "/profile", label: "Profile Settings" },
 ] as const;
 
 type SocialIconProps = { className?: string };

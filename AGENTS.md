@@ -10,7 +10,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 # wedplan-client
 
-Early-stage Next.js 16.4.6 App Router app (React 19.3, TypeScript strict, Tailwind CSS 4, Turbopack): a navbar with a demo session and thin stub routes. `README.md` is stock `create-next-app` boilerplate — it points at `app/page.tsx`, while the real root is `src/app`. Trust config over the README.
+Early-stage Next.js 16.4.6 App Router app (React 19.3, TypeScript strict, Tailwind CSS 4, Turbopack): a navbar and thin stub routes. `README.md` is stock `create-next-app` boilerplate — it points at `app/page.tsx`, while the real root is `src/app`. Trust config over the README.
 
 ## Commands
 
@@ -26,7 +26,7 @@ Early-stage Next.js 16.4.6 App Router app (React 19.3, TypeScript strict, Tailwi
 - Pages/layouts use Next-generated global prop types (`LayoutProps<"/">`, `PageProps<...>`). Use them; do not import or hand-roll equivalents.
 - UI primitives live in `src/components/ui` — shadcn **base-nova** (`style` in `components.json`), built on Base UI (`@base-ui/react`), not Radix. Base UI uses `render={<Element />}` where Radix uses `asChild`. `cn` is imported from the `cn` package (every component does this; `src/lib/utils.ts` only re-exports it, and nothing imports `@/lib/utils`).
 - For links styled as buttons, use `ButtonLink` (`src/components/button-link.tsx`), not `Button render={<Link/>}`: Base UI's Button forces `role="button"` on anchors and warns about non-native buttons.
-- `src/lib/auth.ts` is a demo session store (localStorage + `useSyncExternalStore` via `useSession`, `signIn`/`signOut`, cross-tab `storage` sync). `getServerSnapshot()` returns `null`, so server components always render signed out; client pages that gate on the session (`/dashboard`, `/profile`) also call `useHydrated()` (`src/hooks/use-hydrated.ts`) to avoid a signed-out flash. Replace the store's internals when real auth arrives.
+- Auth is `better-auth` + MongoDB adapter (`src/lib/auth.ts`); API handler `src/app/api/auth/[...all]/route.ts`, browser client `src/lib/auth-client.ts`. `/sign-in` and `/sign-up` live in the `src/app/(auth)` route group and share `src/components/auth-form.tsx`. `/dashboard` and `/profile` are still ungated placeholders — no session-aware UI yet.
 
 ## Framework quirks
 

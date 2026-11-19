@@ -1,8 +1,5 @@
-"use client";
-
 import Link from "next/link";
 
-import { AuthPrompt } from "@/components/auth-prompt";
 import { ButtonLink } from "@/components/button-link";
 import {
   Card,
@@ -11,32 +8,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useHydrated } from "@/hooks/use-hydrated";
-import { useSession } from "@/lib/auth";
 
 export default function DashboardPage() {
-  const user = useSession();
-  const hydrated = useHydrated();
-
-  if (!hydrated) {
-    return null;
-  }
-
-  if (!user) {
-    return (
-      <AuthPrompt
-        title="Sign in to view your dashboard"
-        description="Your wedding plan and saved services live here."
-      />
-    );
-  }
-
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="font-heading text-3xl font-semibold tracking-tight">Dashboard</h1>
-          <p className="mt-2 text-muted-foreground">Welcome back, {user.name}.</p>
+          <p className="mt-2 text-muted-foreground">Plan your big day, all in one place.</p>
         </div>
         <ButtonLink variant="outline" href="/profile">
           Profile Settings

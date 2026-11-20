@@ -26,7 +26,7 @@ Early-stage Next.js 16.4.6 App Router app (React 19.3, TypeScript strict, Tailwi
 - Pages/layouts use Next-generated global prop types (`LayoutProps<"/">`, `PageProps<...>`). Use them; do not import or hand-roll equivalents.
 - UI primitives live in `src/components/ui` — shadcn **base-nova** (`style` in `components.json`), built on Base UI (`@base-ui/react`), not Radix. Base UI uses `render={<Element />}` where Radix uses `asChild`. `cn` is imported from the `cn` package (every component does this; `src/lib/utils.ts` only re-exports it, and nothing imports `@/lib/utils`).
 - For links styled as buttons, use `ButtonLink` (`src/components/button-link.tsx`), not `Button render={<Link/>}`: Base UI's Button forces `role="button"` on anchors and warns about non-native buttons.
-- Auth is `better-auth` + MongoDB adapter (`src/lib/auth.ts`); API handler `src/app/api/auth/[...all]/route.ts`, browser client `src/lib/auth-client.ts`. `/sign-in` and `/sign-up` live in the `src/app/(auth)` route group and share `src/components/auth-form.tsx`. `/dashboard` and `/profile` are still ungated placeholders — no session-aware UI yet.
+- Auth is `better-auth` + MongoDB adapter (`src/lib/auth.ts`); API handler `src/app/api/auth/[...all]/route.ts`, browser client `src/lib/auth-client.ts`. Google/GitHub social providers are configured only when their `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` and `GITHUB_CLIENT_ID`/`GITHUB_CLIENT_SECRET` env vars are present. `/sign-in` and `/sign-up` live in the `src/app/(auth)` route group and share `src/components/auth-form.tsx`. `/dashboard` and `/profile` are still ungated placeholders — no session-aware UI yet.
 
 ## Framework quirks
 

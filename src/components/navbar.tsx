@@ -78,10 +78,13 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 w-full border-b bg-background">
-      <div className="mx-auto flex h-16 w-full max-w-6xl items-center gap-2 px-4 sm:px-6">
+      <div className="relative mx-auto flex h-16 w-full max-w-6xl items-center gap-2 px-4 sm:px-6">
         <Brand />
 
-        <nav className="ml-6 hidden items-center gap-1 md:flex" aria-label="Main">
+        <nav
+          className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-1 md:flex"
+          aria-label="Main"
+        >
           <NavLinks pathname={pathname} />
         </nav>
 

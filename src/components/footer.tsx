@@ -65,7 +65,11 @@ const SOCIAL_LINKS: readonly {
   { name: "Facebook", href: "https://www.facebook.com/wedplan", icon: FacebookIcon },
 ];
 
-export function Footer() {
+export async function Footer() {
+  "use cache";
+
+  const copyrightYear = new Date().getFullYear();
+
   return (
     <footer className="border-t bg-primary/5">
       <div className="mx-auto w-full max-w-6xl px-4 py-12 sm:px-6 sm:py-14">
@@ -150,7 +154,7 @@ export function Footer() {
         </div>
 
         <div className="mt-12 flex flex-col gap-2 border-t pt-6 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-          <p>&copy; {new Date().getFullYear()} WedPlan. All rights reserved.</p>
+          <p>&copy; {copyrightYear} WedPlan. All rights reserved.</p>
           <p>Plan a wedding that feels like you.</p>
         </div>
       </div>

@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { HeartIcon, MenuIcon } from "lucide-react";
 import { useState } from "react";
 
-import { ButtonLink } from "@/components/button-link";
+import { UserMenu } from "@/components/user-menu";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -16,6 +16,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { cn } from "cn";
+
 
 const NAV_LINKS = [
   { href: "/", label: "Home" },
@@ -89,10 +90,7 @@ export function Navbar() {
         </nav>
 
         <div className="ml-auto hidden items-center gap-2 md:flex">
-          <ButtonLink href="/sign-in" variant="ghost">
-            Sign In
-          </ButtonLink>
-          <ButtonLink href="/sign-up">Sign Up</ButtonLink>
+          <UserMenu />
         </div>
 
         <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
@@ -120,16 +118,7 @@ export function Navbar() {
             </nav>
 
             <SheetFooter className="border-t">
-              <ButtonLink
-                href="/sign-in"
-                variant="outline"
-                onClick={() => setMobileOpen(false)}
-              >
-                Sign In
-              </ButtonLink>
-              <ButtonLink href="/sign-up" onClick={() => setMobileOpen(false)}>
-                Sign Up
-              </ButtonLink>
+              <UserMenu variant="mobile" onNavigate={() => setMobileOpen(false)} />
             </SheetFooter>
           </SheetContent>
         </Sheet>

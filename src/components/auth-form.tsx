@@ -91,7 +91,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
     try {
       const result = await authClient.signIn.social({
         provider,
-        callbackURL: "/",
+        callbackURL: "/dashboard",
       });
 
       if (result.error) {
@@ -120,7 +120,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
         return;
       }
 
-      router.push("/");
+      router.push("/dashboard");
       router.refresh();
     } catch {
       setError("Unable to connect. Please try again.");

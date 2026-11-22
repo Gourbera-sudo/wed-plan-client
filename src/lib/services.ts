@@ -3,27 +3,14 @@ import { ObjectId } from "mongodb";
 
 import { getDatabase } from "@/lib/mongodb";
 
-/** Public, serializable shape used by the home page cards. */
-export type FeaturedService = {
-  id: string;
-  name: string;
-  category: string;
-  price: number;
-  location: string;
-  image: string;
-  vendor: {
-    name: string;
-    businessName: string;
-    verified: boolean;
-  };
-};
-
-/** Full, serializable shape used by the service details page. */
-export type ServiceDetail = Omit<FeaturedService, "image"> & {
-  description: string;
-  images: string[];
-  vendorId: string;
-};
+export {
+  SERVICE_CATEGORY_ORDER,
+  type FeaturedService,
+  type ServiceDetail,
+  type ServiceCategoryName,
+} from "@/lib/service-constants";
+import { SERVICE_CATEGORY_ORDER } from "@/lib/service-constants";
+import type { FeaturedService, ServiceDetail } from "@/lib/service-constants";
 
 /**
  * Shape of a document in the `services` collection. Vendor details are
@@ -50,16 +37,6 @@ type ServiceDocument = {
 };
 
 export const FEATURED_SERVICE_LIMIT = 6;
-
-/** Canonical ordering for the public category explorer. */
-export const SERVICE_CATEGORY_ORDER = [
-  "Photography & Videography",
-  "Wedding Venues",
-  "Decoration & Florist",
-  "Catering Services",
-  "Makeup & Styling",
-  "Wedding Fashion",
-] as const;
 
 export type ServiceCategory = {
   name: string;

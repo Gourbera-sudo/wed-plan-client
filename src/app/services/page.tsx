@@ -1,57 +1,60 @@
 import type { Metadata } from "next";
 
-import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ServicesBrowser, type BrowseParams } from "@/components/services-browser";
+import { requireUser } from "@/lib/auth-guards";
+
+export const instant = false;
 
 export const metadata: Metadata = {
   title: "Browse Services",
 };
 
-const SERVICES = [
-  {
-    name: "Venues",
-    description: "Ceremony and reception spaces for every guest count and season.",
-  },
-  {
-    name: "Photography",
-    description: "Photographers and videographers to capture the day as it happens.",
-  },
-  {
-    name: "Catering",
-    description: "Menus, tastings, and bar service from local caterers.",
-  },
-  {
-    name: "Florists",
-    description: "Bouquets, ceremony arches, and table arrangements.",
-  },
-  {
-    name: "Music & Entertainment",
-    description: "Bands, DJs, and ceremony musicians.",
-  },
-  {
-    name: "Beauty & Attire",
-    description: "Hair, makeup, and styling for the couple and wedding party.",
-  },
-];
+function toPositiveInt(value: string | string[] | undefined): number {
+  const raw = Array.isArray(value) ? value[0] : value;
+  const parsed = Number.parseInt(raw ?? "", 10);
+  return Number.isFinite(parsed) && parsed > 1 ? parsed : 1;
+}
 
-export default function ServicesPage() {
+function firstOf(value: string | string[] | undefined): string {
+  return (Array.isArray(value) ? value[0] : value) ?? "";
+}
+
+/**
+ * Browse requires an account — guests are redirected to sign in (per the
+ * product spec); all filtering happens client-side against the API.
+ */
+export default async function ServicesPage({
+  searchParams,
+}: PageProps<"/services">) {
+  await requireUser();
+  const query = await searchParams;
+
+  const sortParam = firstOf(query.sort);
+  const initial: BrowseParams = {
+    search: firstOf(query.search).slice(0, 100),
+    category: firstOf(query.category),
+    location: firstOf(query.location).slice(0, 100),
+    sort: sortParam === "price_desc" ? "price_desc" : "price_asc",
+    page: toPositiveInt(query.page),
+  };
+
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
-      <div className="max-w-2xl">
-        <h1 className="font-heading text-3xl font-semibold tracking-tight">Browse Services</h1>
+    <div className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
+      <header className="max-w-2xl">
+        <span className="inline-flex items-center gap-2 text-xs font-medium tracking-wide text-primary uppercase">
+          Approved vendors only
+        </span>
+        <h1 className="mt-2 font-heading text-3xl font-semibold tracking-tight sm:text-4xl">
+          Browse Services
+        </h1>
         <p className="mt-2 text-muted-foreground">
-          Explore trusted vendors by category. Listings are coming soon.
+          Search by name, filter by category and location, and sort by price to
+          find the right vendor for your day.
         </p>
-      </div>
+      </header>
 
-      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {SERVICES.map((service) => (
-          <Card key={service.name}>
-            <CardHeader>
-              <CardTitle>{service.name}</CardTitle>
-              <CardDescription>{service.description}</CardDescription>
-            </CardHeader>
-          </Card>
-        ))}
+      <div className="mt-8">
+        <ServicesBrowser initial={initial} />
       </div>
     </div>
   );

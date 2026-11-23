@@ -1,4 +1,4 @@
-import { DashboardPlaceholder } from "@/components/dashboard-placeholder";
+import { AdminTransactions } from "@/components/admin-transactions";
 
 export const metadata = {
   title: "Transactions",
@@ -6,14 +6,14 @@ export const metadata = {
 
 export default function AdminTransactionsPage() {
   return (
-    <DashboardPlaceholder
-      title="Transactions"
-      description="Track payments, payouts, and refunds."
-      items={[
-        "Filter payments by date, vendor, or status",
-        "Review subscription revenue and payouts",
-        "Export transaction history for accounting",
-      ]}
-    />
+    <div className="space-y-5">
+      <div>
+        <h2 className="font-heading text-xl font-semibold">Transactions</h2>
+        <p className="text-sm text-muted-foreground">
+          Review subscription payments. UPI payments activate premium only after approval.
+        </p>
+      </div>
+      <AdminTransactions />
+    </div>
   );
 }

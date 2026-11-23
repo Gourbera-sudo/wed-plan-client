@@ -20,9 +20,9 @@ export default function PaymentCancelPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-wrap justify-center gap-2">
-          <ButtonLink href="/dashboard">Back to dashboard</ButtonLink>
-          <ButtonLink href="/services" variant="outline">
-            Browse services
+          <ButtonLink href="/vendor/subscription">Back to subscription</ButtonLink>
+          <ButtonLink href="/dashboard" variant="outline">
+            Go to dashboard
           </ButtonLink>
         </CardContent>
       </Card>

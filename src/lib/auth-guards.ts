@@ -33,11 +33,19 @@ export const getAuthUser = cache(async (): Promise<AuthUser | null> => {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session?.user) return null;
 
+  // The Express API rejects blocked accounts on every request; mirror that on
+  // the client so a blocked user cannot reach a dashboard page at all.
+  const user = session.user as typeof session.user & {
+    isBlocked?: boolean | null;
+    banned?: boolean | null;
+  };
+  if (user.isBlocked || user.banned) return null;
+
   return {
-    id: session.user.id,
-    name: session.user.name,
-    email: session.user.email,
-    role: toRole(session.user.role),
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    role: toRole(user.role),
   };
 });
 

@@ -1,19 +1,9 @@
-import { DashboardPlaceholder } from "@/components/dashboard-placeholder";
+import { ServiceForm } from "@/components/service-form";
 
 export const metadata = {
   title: "Add Service",
 };
 
-export default function VendorAddServicePage() {
-  return (
-    <DashboardPlaceholder
-      title="Add Service"
-      description="Create a new listing for couples to discover."
-      items={[
-        "Service name, category, and description",
-        "Packages, add-ons, and pricing",
-        "Gallery images and service area",
-      ]}
-    />
-  );
+export default function NewServicePage() {
+  return <ServiceForm />;
 }

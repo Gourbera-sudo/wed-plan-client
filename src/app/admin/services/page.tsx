@@ -1,4 +1,4 @@
-import { DashboardPlaceholder } from "@/components/dashboard-placeholder";
+import { AdminServicesManager } from "@/components/admin-services-manager";
 
 export const metadata = {
   title: "Manage Services",
@@ -6,14 +6,14 @@ export const metadata = {
 
 export default function AdminServicesPage() {
   return (
-    <DashboardPlaceholder
-      title="Manage Services"
-      description="Moderate service listings across the marketplace."
-      items={[
-        "Review newly submitted services",
-        "Approve, feature, or remove listings",
-        "Resolve vendor and customer reports",
-      ]}
-    />
+    <div className="space-y-5">
+      <div>
+        <h2 className="font-heading text-xl font-semibold">Manage Services</h2>
+        <p className="text-sm text-muted-foreground">
+          Approve or reject vendor listings. Only approved services appear in browse.
+        </p>
+      </div>
+      <AdminServicesManager />
+    </div>
   );
 }

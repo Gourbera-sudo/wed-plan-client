@@ -1,4 +1,4 @@
-import { DashboardPlaceholder } from "@/components/dashboard-placeholder";
+import { BookingManager } from "@/components/booking-manager";
 
 export const metadata = {
   title: "My Bookings",
@@ -6,14 +6,14 @@ export const metadata = {
 
 export default function CustomerBookingsPage() {
   return (
-    <DashboardPlaceholder
-      title="My Bookings"
-      description="See every service you have booked or requested."
-      items={[
-        "Confirmed bookings with dates and vendors",
-        "Pending requests and vendor responses",
-        "Payment status and receipts",
-      ]}
-    />
+    <div className="space-y-5">
+      <div>
+        <h2 className="font-heading text-xl font-semibold">My Bookings</h2>
+        <p className="text-sm text-muted-foreground">
+          Follow every request from submission to confirmation.
+        </p>
+      </div>
+      <BookingManager mode="customer" />
+    </div>
   );
 }

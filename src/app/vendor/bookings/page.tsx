@@ -1,4 +1,4 @@
-import { DashboardPlaceholder } from "@/components/dashboard-placeholder";
+import { BookingManager } from "@/components/booking-manager";
 
 export const metadata = {
   title: "Booking Requests",
@@ -6,14 +6,14 @@ export const metadata = {
 
 export default function VendorBookingsPage() {
   return (
-    <DashboardPlaceholder
-      title="Booking Requests"
-      description="Review inquiries from couples and respond with availability."
-      items={[
-        "See event date, venue, and estimated guest count",
-        "Accept, decline, or request more details",
-        "Connect booking requests to payments",
-      ]}
-    />
+    <div className="space-y-5">
+      <div>
+        <h2 className="font-heading text-xl font-semibold">Booking Requests</h2>
+        <p className="text-sm text-muted-foreground">
+          Accept or reject requests from couples. Only pending requests can be changed.
+        </p>
+      </div>
+      <BookingManager mode="vendor" />
+    </div>
   );
 }

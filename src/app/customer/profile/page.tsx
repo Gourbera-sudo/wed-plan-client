@@ -1,19 +1,16 @@
-import { DashboardPlaceholder } from "@/components/dashboard-placeholder";
+import { ProfileSettingsForm } from "@/components/profile-settings-form";
+import { requireRole } from "@/lib/auth-guards";
+import { getStoredProfile } from "@/lib/profile";
+
+export const instant = false;
 
 export const metadata = {
   title: "Customer Profile Settings",
 };
 
-export default function CustomerProfilePage() {
-  return (
-    <DashboardPlaceholder
-      title="Profile Settings"
-      description="Manage your personal details and wedding preferences."
-      items={[
-        "Name, email, and profile photo",
-        "Wedding date and location",
-        "Preferred vendors and communication settings",
-      ]}
-    />
-  );
+export default async function CustomerProfilePage() {
+  const user = await requireRole("customer");
+  const profile = await getStoredProfile(user.id);
+
+  return <ProfileSettingsForm initial={profile} />;
 }

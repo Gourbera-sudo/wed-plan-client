@@ -49,8 +49,8 @@ export function DashboardShell({
         </div>
       </div>
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-[220px_minmax(0,1fr)]">
-        <aside className="lg:border-r lg:pr-4">
+      <div className="mt-8 grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[220px_minmax(0,1fr)]">
+        <aside className="min-w-0 lg:border-r lg:pr-4">
           <p className="mb-2 hidden px-3 text-xs font-semibold tracking-wider text-muted-foreground uppercase lg:block">
             Workspace
           </p>

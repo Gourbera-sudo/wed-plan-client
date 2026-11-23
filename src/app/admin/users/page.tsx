@@ -1,19 +1,24 @@
-import { DashboardPlaceholder } from "@/components/dashboard-placeholder";
+import { AdminUsersManager } from "@/components/admin-users-manager";
+import { requireRole } from "@/lib/auth-guards";
+
+export const instant = false;
 
 export const metadata = {
   title: "Manage Users",
 };
 
-export default function AdminUsersPage() {
+export default async function AdminUsersPage() {
+  const admin = await requireRole("admin");
+
   return (
-    <DashboardPlaceholder
-      title="Manage Users"
-      description="Review accounts and assign roles across WedPlan."
-      items={[
-        "Search users by name or email",
-        "Assign customer, vendor, or admin roles",
-        "Suspend or reactivate accounts",
-      ]}
-    />
+    <div className="space-y-5">
+      <div>
+        <h2 className="font-heading text-xl font-semibold">Manage Users</h2>
+        <p className="text-sm text-muted-foreground">
+          Change roles and plans, or block accounts that break the rules.
+        </p>
+      </div>
+      <AdminUsersManager currentUserId={admin.id} />
+    </div>
   );
 }

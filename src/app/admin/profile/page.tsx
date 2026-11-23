@@ -1,19 +1,16 @@
-import { DashboardPlaceholder } from "@/components/dashboard-placeholder";
+import { ProfileSettingsForm } from "@/components/profile-settings-form";
+import { requireRole } from "@/lib/auth-guards";
+import { getStoredProfile } from "@/lib/profile";
+
+export const instant = false;
 
 export const metadata = {
   title: "Admin Profile Settings",
 };
 
-export default function AdminProfilePage() {
-  return (
-    <DashboardPlaceholder
-      title="Profile Settings"
-      description="Manage your admin account details."
-      items={[
-        "Name, email, and profile photo",
-        "Notification and security preferences",
-        "Administrative access settings",
-      ]}
-    />
-  );
+export default async function AdminProfilePage() {
+  const user = await requireRole("admin");
+  const profile = await getStoredProfile(user.id);
+
+  return <ProfileSettingsForm initial={profile} />;
 }

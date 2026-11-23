@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Signing in…</title>
+  </head>
+  <body>
+    <p>Signing in for verification…</p>
+    <form id="f" method="post" action="/api/auth/sign-in/email">
+      <input type="hidden" name="email" value="customer@wedplan.test" />
+      <input type="hidden" name="password" value="Wedplan1!" />
+      <button type="submit">Sign in</button>
+    </form>
+    <script>
+      document.getElementById("f").submit();
+    </script>
+  </body>
+</html>

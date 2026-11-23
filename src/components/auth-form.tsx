@@ -1,9 +1,16 @@
 "use client";
 
+import { cn } from "cn";
+import {
+  EyeIcon,
+  EyeOffIcon,
+  HeartIcon,
+  ImagePlusIcon,
+  LoaderCircleIcon,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { EyeIcon, EyeOffIcon, HeartIcon, LoaderCircleIcon } from "lucide-react";
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -20,6 +27,7 @@ import { Label } from "@/components/ui/label";
 import { authClient } from "@/lib/auth-client";
 
 type AuthMode = "sign-in" | "sign-up";
+type SignupRole = "customer" | "vendor";
 
 const COPY = {
   "sign-in": {
@@ -41,6 +49,34 @@ const COPY = {
 } as const satisfies Record<AuthMode, Record<string, string>>;
 
 type SocialProvider = "google" | "github";
+
+const PASSWORD_RULE = /^(?=.*[a-z])(?=.*[A-Z]).{6,}$/;
+const PASSWORD_ERROR =
+  "Password must be at least 6 characters and include one uppercase and one lowercase letter.";
+
+const ROLE_OPTIONS: {
+  value: SignupRole;
+  label: string;
+  description: string;
+}[] = [
+  {
+    value: "customer",
+    label: "Customer",
+    description: "Find and book wedding services",
+  },
+  {
+    value: "vendor",
+    label: "Vendor",
+    description: "List and manage your services",
+  },
+];
+
+function destinationFor(role?: string) {
+  if (role === "admin") return "/admin";
+  if (role === "vendor") return "/vendor";
+  if (role === "customer") return "/customer";
+  return "/dashboard";
+}
 
 function GoogleIcon() {
   return (
@@ -79,10 +115,40 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState<SignupRole>("customer");
+  const [profileImage, setProfileImage] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [socialPending, setSocialPending] = useState<SocialProvider | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const previewUrlRef = useRef<string | null>(null);
+
+  useEffect(
+    () => () => {
+      if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
+    },
+    [],
+  );
+
+  function handleImageChange(file: File | null) {
+    if (previewUrlRef.current) {
+      URL.revokeObjectURL(previewUrlRef.current);
+      previewUrlRef.current = null;
+    }
+
+    if (file) {
+      previewUrlRef.current = URL.createObjectURL(file);
+      setPreview(previewUrlRef.current);
+    } else {
+      setPreview(null);
+    }
+
+    setError(null);
+    setProfileImage(file);
+  }
 
   async function handleSocialSignIn(provider: SocialProvider) {
     setError(null);
@@ -107,12 +173,48 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
+
+    if (mode === "sign-up" && !PASSWORD_RULE.test(password)) {
+      setError(PASSWORD_ERROR);
+      return;
+    }
+
     setPending(true);
 
     try {
+      let image: string | undefined;
+
+      if (mode === "sign-up" && profileImage) {
+        setUploading(true);
+        const uploadBody = new FormData();
+        uploadBody.append("file", profileImage);
+
+        const uploadResponse = await fetch("/api/upload/image", {
+          method: "POST",
+          body: uploadBody,
+        });
+        const uploadResult = (await uploadResponse.json()) as {
+          url?: string;
+          error?: string;
+        };
+
+        if (!uploadResponse.ok || !uploadResult.url) {
+          setError(uploadResult.error ?? "The image could not be uploaded.");
+          return;
+        }
+
+        image = uploadResult.url;
+      }
+
       const result =
         mode === "sign-up"
-          ? await authClient.signUp.email({ name, email, password })
+          ? await authClient.signUp.email({
+              name,
+              email,
+              password,
+              image,
+              signupRole: role,
+            })
           : await authClient.signIn.email({ email, password });
 
       if (result.error) {
@@ -120,11 +222,14 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
         return;
       }
 
-      router.push("/dashboard");
+      const signedInRole = (result.data?.user as { role?: string } | undefined)
+        ?.role;
+      router.push(destinationFor(signedInRole ?? role));
       router.refresh();
     } catch {
       setError("Unable to connect. Please try again.");
     } finally {
+      setUploading(false);
       setPending(false);
     }
   }
@@ -156,20 +261,55 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
           <CardContent>
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
               {mode === "sign-up" ? (
-                <div className="flex flex-col gap-2">
-                  <Label htmlFor="name">Full name</Label>
-                  <Input
-                    id="name"
-                    name="name"
-                    type="text"
-                    autoComplete="name"
-                    placeholder="Alex Morgan"
-                    value={name}
-                    onChange={(event) => setName(event.target.value)}
-                    minLength={2}
-                    required
-                  />
-                </div>
+                <>
+                  <div className="flex flex-col gap-2">
+                    <Label htmlFor="name">Full name</Label>
+                    <Input
+                      id="name"
+                      name="name"
+                      type="text"
+                      autoComplete="name"
+                      placeholder="Your Name"
+                      value={name}
+                      onChange={(event) => setName(event.target.value)}
+                      minLength={2}
+                      required
+                    />
+                  </div>
+
+                  <fieldset className="flex flex-col gap-2">
+                    <legend className="text-sm font-medium">Account role</legend>
+                    <div className="grid grid-cols-2 gap-2">
+                      {ROLE_OPTIONS.map((option) => (
+                        <label
+                          key={option.value}
+                          className={cn(
+                            "flex cursor-pointer flex-col rounded-lg border p-3 text-sm transition",
+                            role === option.value
+                              ? "border-primary bg-primary/5 ring-1 ring-primary"
+                              : "border-input hover:bg-muted/50",
+                          )}
+                        >
+                          <input
+                            type="radio"
+                            name="role"
+                            value={option.value}
+                            checked={role === option.value}
+                            onChange={() => {
+                              setError(null);
+                              setRole(option.value);
+                            }}
+                            className="sr-only"
+                          />
+                          <span className="font-medium">{option.label}</span>
+                          <span className="mt-0.5 text-xs text-muted-foreground">
+                            {option.description}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  </fieldset>
+                </>
               ) : null}
 
               <div className="flex flex-col gap-2">
@@ -179,7 +319,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
                   name="email"
                   type="email"
                   autoComplete="email"
-                  placeholder="you@example.com"
+                  placeholder="Your Email"
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
                   required
@@ -193,12 +333,14 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
                     id="password"
                     name="password"
                     type={showPassword ? "text" : "password"}
-                    autoComplete={mode === "sign-up" ? "new-password" : "current-password"}
-                    placeholder="At least 8 characters"
+                    autoComplete={
+                      mode === "sign-up" ? "new-password" : "current-password"
+                    }
+                    placeholder="At least 6 characters"
                     className="pr-10"
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
-                    minLength={8}
+                    minLength={mode === "sign-up" ? 6 : undefined}
                     required
                   />
                   <Button
@@ -216,7 +358,54 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
                     )}
                   </Button>
                 </div>
+                {mode === "sign-up" ? (
+                  <p className="text-xs text-muted-foreground">
+                    6+ characters, with one uppercase and one lowercase letter.
+                  </p>
+                ) : null}
               </div>
+
+              {mode === "sign-up" ? (
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="profileImage">Profile image (optional)</Label>
+                  <Input
+                    ref={fileInputRef}
+                    id="profileImage"
+                    name="profileImage"
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp,image/gif"
+                    onChange={(event) =>
+                      handleImageChange(event.target.files?.[0] ?? null)
+                    }
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    JPG, PNG, WEBP or GIF up to 5 MB.
+                  </p>
+                  {preview ? (
+                    <div className="flex items-center gap-3 rounded-lg bg-muted/50 p-2">
+                      <span
+                        aria-hidden="true"
+                        className="size-10 shrink-0 rounded-full bg-cover bg-center ring-1 ring-foreground/10"
+                        style={{ backgroundImage: `url("${preview}")` }}
+                      />
+                      <span className="min-w-0 flex-1 truncate text-xs">
+                        {profileImage?.name}
+                      </span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="xs"
+                        onClick={() => {
+                          handleImageChange(null);
+                          if (fileInputRef.current) fileInputRef.current.value = "";
+                        }}
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
 
               {error ? (
                 <Alert variant="destructive">
@@ -227,12 +416,20 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
               <Button
                 type="submit"
                 className="w-full"
-                disabled={pending || socialPending !== null}
+                disabled={pending || uploading || socialPending !== null}
               >
-                {pending ? (
+                {uploading ? (
+                  <ImagePlusIcon className="size-4 animate-pulse" aria-hidden="true" />
+                ) : pending ? (
                   <LoaderCircleIcon className="size-4 animate-spin" aria-hidden="true" />
                 ) : null}
-                {copy.submit}
+                {uploading
+                  ? "Uploading image…"
+                  : pending
+                    ? mode === "sign-up"
+                      ? "Creating account…"
+                      : "Signing in…"
+                    : copy.submit}
               </Button>
             </form>
 
@@ -247,7 +444,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
                 type="button"
                 variant="outline"
                 className="w-full"
-                disabled={pending || socialPending !== null}
+                disabled={pending || uploading || socialPending !== null}
                 onClick={() => handleSocialSignIn("google")}
               >
                 {socialPending === "google" ? (
@@ -261,7 +458,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
                 type="button"
                 variant="outline"
                 className="w-full"
-                disabled={pending || socialPending !== null}
+                disabled={pending || uploading || socialPending !== null}
                 onClick={() => handleSocialSignIn("github")}
               >
                 {socialPending === "github" ? (

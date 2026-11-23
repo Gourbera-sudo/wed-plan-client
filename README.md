@@ -1,36 +1,76 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# WedPlan
 
-## Getting Started
+Role-based wedding planning platform. Couples browse and book wedding services, vendors manage listings and requests, and admins moderate the marketplace.
 
-First, run the development server:
+- **Client:** Next.js 16 (App Router, React 19, TypeScript, Tailwind CSS 4, Base UI, Better Auth) — this repository. The app root is `src/app`, not `app/`.
+- **API:** Express + MongoDB (`wed-plan` database) in the sibling `wedplan-server` repository. Better Auth owns sessions; the client exchanges its session cookie for a short-lived JWT via `POST /api/auth/token` before calling the API.
+
+## Getting started
+
+Requires Node.js 20+ and a MongoDB connection (local or Atlas).
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# Client
+cp .env.example .env
+npm install
+npm run dev             # http://localhost:3000
+
+# API (in ../wedplan-server)
+cp .env.example .env
+npm install
+npm start               # http://localhost:8000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+`JWT_SECRET` and `BETTER_AUTH_SECRET` must have the same value in both `.env` files so each service can verify the other's tokens. `CLIENT_URL` on the server must match the client origin for CORS and Stripe redirects.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Client environment
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Variable | Purpose |
+| --- | --- |
+| `MONGODB_URI` | Shared MongoDB connection (Better Auth + cached service reads) |
+| `BETTER_AUTH_URL`, `BETTER_AUTH_SECRET` | Session cookies |
+| `GOOGLE_CLIENT_ID/SECRET`, `GITHUB_CLIENT_ID/SECRET` | Optional social sign-in |
+| `ADMIN_EMAILS`, `VENDOR_EMAILS` | Comma-separated emails promoted on sign-up; admin cannot be self-assigned |
+| `IMGBB_API_KEY` | Server-side image uploads via `/api/upload/image` |
+| `NEXT_PUBLIC_API_URL` | Express API origin (default `http://localhost:8000`) |
 
-## Learn More
+### Server environment
 
-To learn more about Next.js, take a look at the following resources:
+`MONGODB_URI`, `JWT_SECRET`, and `BETTER_AUTH_SECRET` are required. Optional: `PORT`, `CLIENT_URL`, `JWT_EXPIRES_IN`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `IMGBB_API_KEY`, `UPI_VPA`, `UPI_PAYEE_NAME`, `UPI_MONTHLY_PAISE`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Scripts
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npx next typegen && npx tsc --noEmit   # typecheck (typegen must run first)
+npm run lint                           # ESLint 9 flat config
+npm run build && npm start             # production build/serve
+npm run seed:services                  # curated homepage listings (client)
+npm test                               # API smoke test (in wedplan-server)
+```
 
-## Deploy on Vercel
+There is no test runner in the client; the typecheck and lint are the closest checks.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Routes and access
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| Area | Routes | Access |
+| --- | --- | --- |
+| Public | `/`, `/services`, `/sign-in`, `/sign-up` | Everyone (browse requires sign-in) |
+| Private | `/dashboard`, `/profile`, `/payment/success`, `/payment/cancel` | Signed-in users |
+| Customer | `/customer`, `/customer/bookings`, `/customer/profile` | `customer` |
+| Vendor | `/vendor`, `/vendor/services`, `/vendor/services/new`, `/vendor/bookings`, `/vendor/subscription`, `/vendor/profile` | `vendor` |
+| Admin | `/admin`, `/admin/users`, `/admin/services`, `/admin/transactions` | `admin` |
+
+Role layouts call `requireRole(...)` on the server; a user who edits the URL into another role's area is redirected to `/unauthorized`. Blocked accounts are rejected by both the client guard and every protected API route.
+
+## Subscriptions
+
+Vendors can pay for Premium two ways:
+
+- **Card (Stripe test mode):** checkout redirects back to the client, but activation happens only in the signature-verified webhook.
+- **UPI:** the server creates a pending order with a QR/deep link, the vendor submits the UTR, and an admin approves it in `/admin/transactions`. Only that authenticated admin action activates Premium. Success redirects and polling never change the plan.
+
+Configure `UPI_VPA` (and optionally `UPI_PAYEE_NAME`, `UPI_MONTHLY_PAISE` in paise) on the server to enable UPI.
+
+## Deployment
+
+Deploy the client (e.g. Vercel) with all client env vars set, and host the Express API separately with its own env vars. Set `CLIENT_URL` to the deployed client origin, register the Stripe webhook against `https://<api-host>/api/payments/webhook` with `STRIPE_WEBHOOK_SECRET`, and use a reachable `UPI_VPA`. After moderation or listing changes the public cached listings are expired through the `revalidateServices` server action.

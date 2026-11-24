@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { LoaderCircleIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -20,6 +21,7 @@ type Booking = {
   _id: string;
   serviceName: string;
   serviceCategory?: string;
+  serviceImage?: string;
   vendorName?: string;
   customerName?: string;
   customerEmail?: string;
@@ -143,29 +145,80 @@ export function BookingManager({ mode }: { mode: "customer" | "vendor" }) {
         return (
           <Card key={booking._id}>
             <CardHeader className="flex flex-col gap-2 pb-3 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <CardTitle className="text-base">{booking.serviceName}</CardTitle>
-                <CardDescription>
-                  {dateLabel(booking.eventDate)} · {booking.eventLocation}
-                  {booking.guests ? ` · ${booking.guests} guests` : ""}
-                </CardDescription>
+              <div className="flex min-w-0 items-center gap-3">
+                {booking.serviceImage ? (
+                  <Image
+                    src={booking.serviceImage}
+                    alt=""
+                    width={48}
+                    height={48}
+                    unoptimized
+                    className="size-12 shrink-0 rounded-lg object-cover"
+                  />
+                ) : null}
+                <div className="min-w-0">
+                  <CardTitle className="truncate text-base">
+                    {booking.serviceName}
+                  </CardTitle>
+                  <CardDescription className="truncate">
+                    {booking.serviceCategory || "Wedding service"}
+                    {booking.vendorName ? ` · ${booking.vendorName}` : ""}
+                  </CardDescription>
+                </div>
               </div>
               <Badge variant={badge.variant}>{badge.label}</Badge>
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
+              <dl className="grid gap-x-6 gap-y-3 sm:grid-cols-2">
+                <div>
+                  <dt className="text-xs text-muted-foreground">Customer</dt>
+                  <dd className="font-medium">
+                    {mode === "vendor"
+                      ? (booking.customerName ?? "A customer")
+                      : "You"}
+                  </dd>
+                  {mode === "vendor" && booking.customerEmail ? (
+                    <dd className="break-all text-xs text-muted-foreground">
+                      {booking.customerEmail}
+                    </dd>
+                  ) : null}
+                  {mode === "customer" && booking.vendorName ? (
+                    <dd className="text-xs text-muted-foreground">
+                      {booking.vendorName}
+                    </dd>
+                  ) : null}
+                </div>
+                <div>
+                  <dt className="text-xs text-muted-foreground">Service</dt>
+                  <dd className="font-medium">{booking.serviceName}</dd>
+                  {booking.serviceCategory ? (
+                    <dd className="text-xs text-muted-foreground">
+                      {booking.serviceCategory}
+                    </dd>
+                  ) : null}
+                </div>
+                <div>
+                  <dt className="text-xs text-muted-foreground">Event date</dt>
+                  <dd className="font-medium">{dateLabel(booking.eventDate)}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs text-muted-foreground">Event location</dt>
+                  <dd className="font-medium">{booking.eventLocation}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs text-muted-foreground">Guests</dt>
+                  <dd className="font-medium">{booking.guests || "—"}</dd>
+                </div>
+                <div className="sm:col-span-2">
+                  <dt className="text-xs text-muted-foreground">Customer message</dt>
+                  <dd className="rounded-lg bg-muted/40 p-3 text-sm">
+                    {booking.message || "No message provided."}
+                  </dd>
+                </div>
+              </dl>
               <p className="text-xs text-muted-foreground">
                 Requested {dateLabel(booking.createdAt)}
               </p>
-              <p className="text-muted-foreground">
-                {mode === "vendor"
-                  ? `Requested by ${booking.customerName ?? "a customer"}${booking.customerEmail ? ` (${booking.customerEmail})` : ""}`
-                  : `Vendor: ${booking.vendorName ?? "WedPlan vendor"}`}
-              </p>
-              {booking.message ? (
-                <p className="rounded-lg bg-muted/40 p-3 text-sm">
-                  {booking.message}
-                </p>
-              ) : null}
               {booking.status === "pending" ? (
                 <div className="flex flex-wrap gap-2">
                   {mode === "vendor" ? (

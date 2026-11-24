@@ -1,33 +1,21 @@
-import {
-  ArrowUpRightIcon,
-  Building2Icon,
-  CameraIcon,
-  Flower2Icon,
-  ShirtIcon,
-  SparklesIcon,
-  UtensilsCrossedIcon,
-  type LucideIcon,
-} from "lucide-react";
+import { ArrowUpRightIcon, SparklesIcon } from "lucide-react";
 import Link from "next/link";
 
 import { Reveal } from "@/components/motion-reveal";
+import { CATEGORY_ICONS } from "@/lib/category-icons";
+import { categorySlug } from "@/lib/service-constants";
 import { getServiceCategories } from "@/lib/services";
-
-const CATEGORY_ICONS: Record<string, LucideIcon> = {
-  "Photography & Videography": CameraIcon,
-  "Wedding Venues": Building2Icon,
-  "Decoration & Florist": Flower2Icon,
-  "Catering Services": UtensilsCrossedIcon,
-  "Makeup & Styling": SparklesIcon,
-  "Wedding Fashion": ShirtIcon,
-};
 
 /** Section 2 — categories are derived from approved, active listings. */
 export async function ServiceCategories() {
   const categories = await getServiceCategories();
 
   return (
-    <section aria-labelledby="service-categories-title" className="mt-16 sm:mt-20">
+    <section
+      id="service-categories"
+      aria-labelledby="service-categories-title"
+      className="mt-16 sm:mt-20"
+    >
       <Reveal className="max-w-2xl">
         <span className="inline-flex items-center gap-2 text-xs font-medium tracking-wide text-primary uppercase">
           <SparklesIcon className="size-3.5" aria-hidden="true" />
@@ -51,7 +39,7 @@ export async function ServiceCategories() {
           return (
             <Reveal key={category.name} className="h-full" delay={index * 0.05}>
               <Link
-                href={`/services?category=${encodeURIComponent(category.name)}`}
+                href={`/categories/${categorySlug(category.name)}`}
                 className="group flex h-full items-center gap-4 rounded-xl bg-card p-5 ring-1 ring-foreground/10 transition duration-300 hover:-translate-y-0.5 hover:ring-primary/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
               >
                 <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">

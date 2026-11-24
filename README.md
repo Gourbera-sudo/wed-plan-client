@@ -55,7 +55,7 @@ There is no test runner in the client; the typecheck and lint are the closest ch
 | Area | Routes | Access |
 | --- | --- | --- |
 | Public | `/`, `/services`, `/sign-in`, `/sign-up` | Everyone (browse requires sign-in) |
-| Private | `/dashboard`, `/profile`, `/payment/success`, `/payment/cancel` | Signed-in users |
+| Private | `/dashboard`, `/profile`, `/categories/[slug]`, `/payment/success`, `/payment/cancel` | Signed-in users |
 | Customer | `/customer`, `/customer/bookings`, `/customer/profile` | `customer` |
 | Vendor | `/vendor`, `/vendor/services`, `/vendor/services/new`, `/vendor/bookings`, `/vendor/subscription`, `/vendor/profile` | `vendor` |
 | Admin | `/admin`, `/admin/users`, `/admin/services`, `/admin/transactions` | `admin` |

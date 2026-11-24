@@ -83,6 +83,23 @@ export async function getFeaturedServices(
   return docs.map(toFeaturedService);
 }
 
+/** Approved, active listings for one category detail page. */
+export async function getServicesByCategory(
+  category: string,
+): Promise<FeaturedService[]> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("services");
+
+  const services = getDatabase().collection<ServiceDocument>("services");
+  const docs = await services
+    .find({ isApproved: true, isActive: true, category })
+    .sort({ featured: -1, order: 1, createdAt: -1 })
+    .toArray();
+
+  return docs.map(toFeaturedService);
+}
+
 /**
  * Categories with at least one approved, active listing. Derived from the
  * services collection so no duplicate category collection is needed.

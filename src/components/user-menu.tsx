@@ -173,7 +173,7 @@ function DesktopUserMenu({
               </Button>
             </HoverCardContent>
           </HoverCard>
-          <span className="hidden max-w-24 truncate text-sm font-medium lg:block">
+          <span className="max-w-28 truncate text-sm font-medium">
             {user.name}
           </span>
           <ChevronDownIcon className="size-4 text-muted-foreground" aria-hidden="true" />

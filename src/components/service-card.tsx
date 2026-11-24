@@ -12,9 +12,9 @@ import {
 } from "@/components/ui/card";
 import type { FeaturedService } from "@/lib/services";
 
-const priceFormatter = new Intl.NumberFormat("en-US", {
+const priceFormatter = new Intl.NumberFormat("en-IN", {
   style: "currency",
-  currency: "USD",
+  currency: "INR",
   maximumFractionDigits: 0,
 });
 

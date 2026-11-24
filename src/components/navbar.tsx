@@ -18,11 +18,11 @@ import {
 import { cn } from "cn";
 
 
+// Public navigation. Dashboard and profile settings live in the user menu so
+// guests only see sign-in links and signed-in users see role-aware destinations.
 const NAV_LINKS = [
   { href: "/", label: "Home" },
   { href: "/services", label: "Browse Services" },
-  { href: "/dashboard", label: "Dashboard" },
-  { href: "/profile", label: "Profile" },
 ] as const;
 
 function isActive(pathname: string, href: string) {

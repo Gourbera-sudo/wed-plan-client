@@ -71,6 +71,14 @@ const priceFormatter = new Intl.NumberFormat("en-IN", {
   maximumFractionDigits: 0,
 });
 
+const STATUS_LABELS: Record<string, string> = {
+  all: "All statuses",
+  pending: "Pending",
+  approved: "Live",
+  paused: "Paused",
+  rejected: "Rejected",
+};
+
 export function AdminServicesManager() {
   const [services, setServices] = useState<ManagedService[]>([]);
   const [loading, setLoading] = useState(true);
@@ -236,7 +244,9 @@ export function AdminServicesManager() {
             onValueChange={(value) => setCategory(value ?? "all")}
           >
             <SelectTrigger id="admin-service-category" className="w-full">
-              <SelectValue />
+              <SelectValue>
+                {(value) => (value === "all" ? "All categories" : String(value))}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All categories</SelectItem>
@@ -255,7 +265,9 @@ export function AdminServicesManager() {
             onValueChange={(value) => setStateFilter(value ?? "all")}
           >
             <SelectTrigger id="admin-service-state" className="w-full">
-              <SelectValue />
+              <SelectValue>
+                {(value) => STATUS_LABELS[String(value)] ?? String(value)}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All statuses</SelectItem>

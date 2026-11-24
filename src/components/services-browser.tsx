@@ -52,6 +52,11 @@ const EMPTY_PARAMS: BrowseParams = {
   page: 1,
 };
 
+const SORT_LABELS: Record<BrowseParams["sort"], string> = {
+  price_asc: "Price: low to high",
+  price_desc: "Price: high to low",
+};
+
 /** Maps a raw API service document onto the shared card shape. */
 function toCardService(doc: Record<string, unknown>): FeaturedService {
   const images = Array.isArray(doc.images) ? (doc.images as string[]) : [];
@@ -213,7 +218,9 @@ export function ServicesBrowser({ initial }: { initial: BrowseParams }) {
               }
             >
               <SelectTrigger id="browse-sort" className="w-full">
-                <SelectValue />
+                <SelectValue>
+                  {(value) => SORT_LABELS[value as BrowseParams["sort"]] ?? String(value)}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="price_asc">Price: low to high</SelectItem>
@@ -234,7 +241,9 @@ export function ServicesBrowser({ initial }: { initial: BrowseParams }) {
             }
           >
             <SelectTrigger id="browse-category" className="w-full sm:w-64">
-              <SelectValue placeholder="All categories" />
+              <SelectValue>
+                {(value) => (value === "all" ? "All categories" : String(value))}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All categories</SelectItem>

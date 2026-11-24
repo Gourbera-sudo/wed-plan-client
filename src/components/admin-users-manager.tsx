@@ -50,6 +50,13 @@ function messageOf(error: unknown) {
   return error instanceof Error ? error.message : "Something went wrong.";
 }
 
+const ROLE_LABELS: Record<string, string> = {
+  all: "All roles",
+  customer: "Customer",
+  vendor: "Vendor",
+  admin: "Admin",
+};
+
 function toRow(user: ManagedUser): UserRow {
   return {
     ...user,
@@ -225,7 +232,9 @@ export function AdminUsersManager({ currentUserId }: { currentUserId: string }) 
             onValueChange={(value) => setRoleFilter(value ?? "all")}
           >
             <SelectTrigger id="admin-user-role" className="w-full">
-              <SelectValue />
+              <SelectValue>
+                {(value) => ROLE_LABELS[String(value)] ?? String(value)}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All roles</SelectItem>

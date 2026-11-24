@@ -45,22 +45,25 @@ async function loadOverview(role: "vendor" | "customer" | "admin"): Promise<Over
     ]);
     const active = listingData.services.filter((item) => item.isActive !== false).length;
     const pending = requestData.bookings.filter((item) => item.status === "pending").length;
+    const accepted = requestData.bookings.filter((item) => item.status === "accepted").length;
     const premium = profileData.user.subscriptionPlan === "premium";
 
     return {
       metrics: [
+        { label: "Total services", value: String(listingData.services.length) },
         {
           label: "Active services",
           value: String(active),
           hint: active ? "Your published listings." : "Publish your first service to get started.",
         },
         {
-          label: "New booking requests",
+          label: "Pending booking requests",
           value: String(pending),
           hint: pending ? "Waiting for your response." : "Requests will appear here in real time.",
         },
+        { label: "Accepted bookings", value: String(accepted) },
         {
-          label: "Subscription",
+          label: "Current plan",
           value: premium ? "Premium" : "Free",
           hint: premium ? "Unlimited listings enabled." : "Upgrade to reach more couples.",
         },
@@ -76,16 +79,18 @@ async function loadOverview(role: "vendor" | "customer" | "admin"): Promise<Over
     const data = await apiFetch<{ bookings: Booking[] }>("/api/bookings/mine");
     const pending = data.bookings.filter((item) => item.status === "pending").length;
     const accepted = data.bookings.filter((item) => item.status === "accepted").length;
+    const rejected = data.bookings.filter((item) => item.status === "rejected").length;
 
     return {
       metrics: [
-        { label: "Total bookings", value: String(data.bookings.length) },
+        { label: "Total booking requests", value: String(data.bookings.length) },
         {
-          label: "Awaiting response",
+          label: "Pending bookings",
           value: String(pending),
           hint: "Vendors usually reply within a day.",
         },
-        { label: "Confirmed", value: String(accepted) },
+        { label: "Accepted bookings", value: String(accepted) },
+        { label: "Rejected bookings", value: String(rejected) },
       ],
       recent: data.bookings.slice(0, 3),
       recentTitle: "Your latest bookings",
@@ -96,6 +101,8 @@ async function loadOverview(role: "vendor" | "customer" | "admin"): Promise<Over
 
   const stats = await apiFetch<{
     users: number;
+    vendors: number;
+    customers: number;
     services: number;
     pendingServices: number;
     bookings: number;
@@ -104,15 +111,16 @@ async function loadOverview(role: "vendor" | "customer" | "admin"): Promise<Over
 
   return {
     metrics: [
-      { label: "Users", value: String(stats.users) },
-      { label: "Services", value: String(stats.services) },
+      { label: "Total registered users", value: String(stats.users) },
+      { label: "Vendors", value: String(stats.vendors) },
+      { label: "Customers", value: String(stats.customers) },
+      { label: "Total services", value: String(stats.services) },
       {
-        label: "Pending approval",
+        label: "Pending services",
         value: String(stats.pendingServices),
         hint: "Listings waiting for moderation.",
       },
-      { label: "Bookings", value: String(stats.bookings) },
-      { label: "Successful payments", value: String(stats.transactions) },
+      { label: "Total transactions", value: String(stats.transactions) },
     ],
     recent: [],
     recentTitle: "",

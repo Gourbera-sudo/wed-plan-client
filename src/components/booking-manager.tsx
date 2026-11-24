@@ -153,6 +153,9 @@ export function BookingManager({ mode }: { mode: "customer" | "vendor" }) {
               <Badge variant={badge.variant}>{badge.label}</Badge>
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
+              <p className="text-xs text-muted-foreground">
+                Requested {dateLabel(booking.createdAt)}
+              </p>
               <p className="text-muted-foreground">
                 {mode === "vendor"
                   ? `Requested by ${booking.customerName ?? "a customer"}${booking.customerEmail ? ` (${booking.customerEmail})` : ""}`

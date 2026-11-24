@@ -52,4 +52,7 @@ export type ServiceDetail = Omit<FeaturedService, "image"> & {
   description: string;
   images: string[];
   vendorId: string;
+  /** Optional booking rules set by the vendor. Empty means flexible. */
+  eventTypes?: string[];
+  availability?: string[];
 };

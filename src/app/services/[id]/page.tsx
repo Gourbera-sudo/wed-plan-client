@@ -189,22 +189,57 @@ export default async function ServiceDetailsPage({
             </p>
           </section>
 
-          <div className="mt-8 flex flex-wrap gap-4 rounded-xl bg-secondary/60 p-5 text-sm ring-1 ring-foreground/10">
-            <span className="flex items-center gap-2">
-              <CalendarDaysIcon
-                className="size-4 shrink-0 text-primary"
-                aria-hidden="true"
-              />
-              Flexible dates
-            </span>
-            <span className="flex items-center gap-2">
+          <section
+            aria-labelledby="booking-details-title"
+            className="mt-8 rounded-xl bg-secondary/60 p-5 text-sm ring-1 ring-foreground/10"
+          >
+            <h2 id="booking-details-title" className="font-medium">
+              Booking details
+            </h2>
+            <div className="mt-3 grid gap-4 sm:grid-cols-2">
+              <div>
+                <p className="mb-2 flex items-center gap-2 text-xs text-muted-foreground">
+                  <CalendarDaysIcon
+                    className="size-4 shrink-0 text-primary"
+                    aria-hidden="true"
+                  />
+                  Event types
+                </p>
+                {service.eventTypes?.length ? (
+                  <div className="flex flex-wrap gap-1.5">
+                    {service.eventTypes.map((type) => (
+                      <Badge key={type} variant="outline">
+                        {type}
+                      </Badge>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground">
+                    Flexible — tell the vendor what you&apos;re planning.
+                  </p>
+                )}
+              </div>
+              <div>
+                <p className="mb-2 text-xs text-muted-foreground">Availability</p>
+                {service.availability?.length ? (
+                  <ul className="space-y-1 text-muted-foreground">
+                    {service.availability.map((note) => (
+                      <li key={note}>{note}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-muted-foreground">Flexible dates</p>
+                )}
+              </div>
+            </div>
+            <p className="mt-4 flex items-center gap-2 text-muted-foreground">
               <ShieldCheckIcon
                 className="size-4 shrink-0 text-primary"
                 aria-hidden="true"
               />
-              Reviewed vendor
-            </span>
-          </div>
+              Reviewed and approved by WedPlan
+            </p>
+          </section>
         </div>
 
         <Card className="lg:sticky lg:top-24">

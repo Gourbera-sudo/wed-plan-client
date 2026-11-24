@@ -42,6 +42,7 @@ type UpiOrder = {
 
 type Profile = {
   plan: string;
+  active: boolean;
   expiresAt: string | null;
 };
 
@@ -81,11 +82,17 @@ export function SubscriptionPanel() {
     async function load() {
       try {
         const data = await apiFetch<{
-          user: { subscriptionPlan?: string; subscriptionExpiresAt?: string | null };
+          user: {
+            subscriptionPlan?: string;
+            subscriptionExpiresAt?: string | null;
+            isPremium?: boolean;
+          };
         }>("/api/auth/me");
         if (cancelled) return;
+        const plan = data.user.subscriptionPlan ?? "free";
         setProfile({
-          plan: data.user.subscriptionPlan ?? "free",
+          plan,
+          active: data.user.isPremium ?? plan === "premium",
           expiresAt: data.user.subscriptionExpiresAt ?? null,
         });
       } catch (loadError) {
@@ -174,8 +181,11 @@ export function SubscriptionPanel() {
     }
   }
 
-  const isPremium = profile?.plan === "premium";
+  const isPremium = profile?.active === true;
   const expires = expiryLabel(profile?.expiresAt ?? null);
+  // The API reports an expired plan as free, so an expiry timestamp on a
+  // non-premium account is enough to show the renewal notice.
+  const expired = Boolean(profile?.expiresAt) && !isPremium;
   const submitted = order?.status === "verifying" || order?.status === "succeeded";
 
   return (
@@ -194,10 +204,23 @@ export function SubscriptionPanel() {
             <BadgeCheckIcon className="size-3.5" aria-hidden="true" />
             Premium{expires ? ` until ${expires}` : ""}
           </Badge>
+        ) : expired ? (
+          <Badge variant="destructive" className="w-fit">
+            Premium expired{expires ? ` on ${expires}` : ""}
+          </Badge>
         ) : (
           <Badge variant="outline" className="w-fit">Free plan</Badge>
         )}
       </div>
+
+      {expired ? (
+        <Alert variant="destructive">
+          <AlertDescription>
+            Your premium plan ended{expires ? ` on ${expires}` : ""}. The free plan
+            limit of three active services now applies until you renew.
+          </AlertDescription>
+        </Alert>
+      ) : null}
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card className={!isPremium ? "ring-2 ring-primary/30" : ""}>

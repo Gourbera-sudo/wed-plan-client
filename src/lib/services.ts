@@ -34,6 +34,8 @@ type ServiceDocument = {
   featured?: boolean;
   order?: number;
   createdAt?: Date;
+  eventTypes?: string[];
+  availability?: string[];
 };
 
 export const FEATURED_SERVICE_LIMIT = 6;
@@ -151,5 +153,7 @@ export async function getServiceById(id: string): Promise<ServiceDetail | null> 
     description: doc.description ?? "",
     images: doc.images?.length ? doc.images : [doc.image],
     vendorId: doc.vendorId ?? "",
+    eventTypes: doc.eventTypes ?? [],
+    availability: doc.availability ?? [],
   };
 }

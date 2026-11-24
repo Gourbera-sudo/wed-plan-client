@@ -1,6 +1,12 @@
 "use client";
 
-import { LoaderCircleIcon, Trash2Icon } from "lucide-react";
+import {
+  LoaderCircleIcon,
+  PauseIcon,
+  PencilIcon,
+  PlayIcon,
+  Trash2Icon,
+} from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 
@@ -76,6 +82,36 @@ export function VendorServicesManager() {
       cancelled = true;
     };
   }, []);
+
+  async function toggleAvailability(service: ManagedService) {
+    setBusyId(service._id);
+    setError(null);
+    try {
+      const data = await apiFetch<{ service: ManagedService }>(
+        `/api/vendor/services/${service._id}`,
+        { method: "PUT", body: { isActive: !service.isActive } },
+      );
+      setServices((current) =>
+        current.map((item) =>
+          item._id === service._id ? { ...item, ...data.service } : item,
+        ),
+      );
+      await revalidateServices();
+      toast.add({
+        title: data.service.isActive ? "Service reactivated" : "Service paused",
+        description: `"${service.name}" is ${
+          data.service.isActive ? "available again" : "hidden from browse"
+        }.`,
+        type: "success",
+      });
+    } catch (availabilityError) {
+      const text = messageOf(availabilityError);
+      setError(text);
+      toast.add({ title: "Could not update availability", description: text, type: "error" });
+    } finally {
+      setBusyId(null);
+    }
+  }
 
   async function remove(service: ManagedService) {
     if (!window.confirm(`Delete "${service.name}"? This cannot be undone.`)) return;
@@ -162,6 +198,30 @@ export function VendorServicesManager() {
                 <ButtonLink href={`/services/${service._id}`} variant="outline" size="sm">
                   View
                 </ButtonLink>
+                <ButtonLink
+                  href={`/vendor/services/${service._id}/edit`}
+                  variant="outline"
+                  size="sm"
+                >
+                  <PencilIcon className="size-4" aria-hidden="true" />
+                  Edit
+                </ButtonLink>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={busy}
+                  onClick={() => void toggleAvailability(service)}
+                >
+                  {busy ? (
+                    <LoaderCircleIcon className="size-4 animate-spin" aria-hidden="true" />
+                  ) : service.isActive ? (
+                    <PauseIcon className="size-4" aria-hidden="true" />
+                  ) : (
+                    <PlayIcon className="size-4" aria-hidden="true" />
+                  )}
+                  {service.isActive ? "Pause" : "Activate"}
+                </Button>
                 <Button
                   type="button"
                   variant="destructive"

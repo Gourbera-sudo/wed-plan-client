@@ -2,7 +2,7 @@
 
 import { ImagePlusIcon, LoaderCircleIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useRef, useState, type ChangeEvent, type FormEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 
 import { revalidateServices } from "@/app/actions/revalidate";
 import { ButtonLink } from "@/components/button-link";
@@ -22,12 +22,26 @@ import { toast } from "@/components/ui/toast";
 import { apiFetch } from "@/lib/api";
 import { SERVICE_CATEGORY_ORDER } from "@/lib/service-constants";
 
+type EditableService = {
+  _id: string;
+  name: string;
+  category: string;
+  description?: string;
+  location: string;
+  price: number;
+  image?: string;
+  images?: string[];
+  isActive?: boolean;
+  eventTypes?: string[];
+  availability?: string[];
+};
+
 function messageOf(error: unknown) {
   return error instanceof Error ? error.message : "Something went wrong.";
 }
 
 /** Vendor listing form. New listings always start pending admin approval. */
-export function ServiceForm() {
+export function ServiceForm({ serviceId }: { serviceId?: string }) {
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
   const [name, setName] = useState("");
@@ -37,9 +51,52 @@ export function ServiceForm() {
   const [price, setPrice] = useState("");
   const [image, setImage] = useState("");
   const [images, setImages] = useState("");
+  const [eventTypes, setEventTypes] = useState("");
+  const [availability, setAvailability] = useState("");
+  const [isActive, setIsActive] = useState(true);
+  const [loading, setLoading] = useState(Boolean(serviceId));
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!serviceId) return;
+    let cancelled = false;
+
+    async function load() {
+      try {
+        const data = await apiFetch<{ services: EditableService[] }>(
+          "/api/vendor/services",
+        );
+        const service = data.services.find((item) => item._id === serviceId);
+        if (!service) throw new Error("This service could not be found.");
+        if (cancelled) return;
+
+        const cover = service.image || service.images?.[0] || "";
+        setName(service.name);
+        setCategory(service.category);
+        setDescription(service.description ?? "");
+        setLocation(service.location);
+        setPrice(String(service.price));
+        setImage(cover);
+        setImages(
+          (service.images ?? []).filter((url) => url !== cover).join("\n"),
+        );
+        setEventTypes((service.eventTypes ?? []).join("\n"));
+        setAvailability((service.availability ?? []).join("\n"));
+        setIsActive(service.isActive !== false);
+      } catch (loadError) {
+        if (!cancelled) setError(messageOf(loadError));
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    void load();
+    return () => {
+      cancelled = true;
+    };
+  }, [serviceId]);
 
   async function onFileChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -75,40 +132,73 @@ export function ServiceForm() {
         .split(/[\n,]/)
         .map((url) => url.trim())
         .filter(Boolean);
+      const body = {
+        name: name.trim(),
+        category,
+        description: description.trim(),
+        location: location.trim(),
+        price: Number(price),
+        image: image.trim(),
+        images: extraImages,
+        eventTypes: eventTypes
+          .split("\n")
+          .map((value) => value.trim())
+          .filter(Boolean),
+        availability: availability
+          .split("\n")
+          .map((value) => value.trim())
+          .filter(Boolean),
+        isActive,
+      };
 
-      await apiFetch("/api/vendor/services", {
-        method: "POST",
-        body: {
-          name: name.trim(),
-          category,
-          description: description.trim(),
-          location: location.trim(),
-          price: Number(price),
-          image: image.trim(),
-          images: extraImages,
-        },
-      });
-      await revalidateServices();
-      toast.add({
-        title: "Service submitted",
-        description: "Your listing will appear publicly once an admin approves it.",
-        type: "success",
-      });
+      if (serviceId) {
+        await apiFetch(`/api/vendor/services/${serviceId}`, {
+          method: "PUT",
+          body,
+        });
+        await revalidateServices();
+        toast.add({
+          title: "Service updated",
+          description:
+            "Changes to service details are sent back to admin review. Availability changes apply immediately.",
+          type: "success",
+        });
+      } else {
+        await apiFetch("/api/vendor/services", { method: "POST", body });
+        await revalidateServices();
+        toast.add({
+          title: "Service submitted",
+          description: "Your listing will appear publicly once an admin approves it.",
+          type: "success",
+        });
+      }
       router.push("/vendor/services");
     } catch (submitError) {
       const text = messageOf(submitError);
       setError(text);
-      toast.add({ title: "Could not save service", description: text, type: "error" });
+      toast.add({
+        title: serviceId ? "Could not update service" : "Could not save service",
+        description: text,
+        type: "error",
+      });
       setSaving(false);
     }
+  }
+
+  if (loading) {
+    return <p className="text-sm text-muted-foreground">Loading service…</p>;
   }
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="font-heading text-xl">New service</CardTitle>
+        <CardTitle className="font-heading text-xl">
+          {serviceId ? "Edit service" : "New service"}
+        </CardTitle>
         <CardDescription>
-          Tell couples what you offer. An admin reviews every listing before it goes live.
+          {serviceId
+            ? "Update the details couples see. Content changes must be approved again before the listing goes live."
+            : "Tell couples what you offer. An admin reviews every listing before it goes live."}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -230,12 +320,60 @@ export function ServiceForm() {
             />
           </div>
 
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="service-event-types">Event types</Label>
+              <Textarea
+                id="service-event-types"
+                value={eventTypes}
+                onChange={(event) => setEventTypes(event.target.value)}
+                placeholder={"Wedding ceremony\nReception\nMehendi"}
+                rows={3}
+              />
+              <p className="text-xs text-muted-foreground">One per line.</p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="service-availability">Availability notes</Label>
+              <Textarea
+                id="service-availability"
+                value={availability}
+                onChange={(event) => setAvailability(event.target.value)}
+                placeholder={"Weekends and weekdays\nAdvance booking required"}
+                rows={3}
+              />
+              <p className="text-xs text-muted-foreground">
+                Shown to couples before they request a date.
+              </p>
+            </div>
+          </div>
+
+          <label className="flex items-start gap-3 rounded-lg border p-3 text-sm">
+            <input
+              type="checkbox"
+              checked={isActive}
+              onChange={(event) => setIsActive(event.target.checked)}
+              className="mt-0.5 size-4 accent-[var(--primary)]"
+            />
+            <span>
+              <span className="font-medium">Available for bookings</span>
+              <span className="mt-0.5 block text-xs text-muted-foreground">
+                Pause a service to hide it from couples without deleting it.
+              </span>
+            </span>
+          </label>
+
           <div className="flex flex-wrap gap-2">
             <Button type="submit" disabled={saving || uploading}>
               {saving ? (
                 <LoaderCircleIcon className="size-4 animate-spin" aria-hidden="true" />
               ) : null}
-              {saving ? "Submitting…" : "Submit service"}
+              {saving
+                ? serviceId
+                  ? "Saving…"
+                  : "Submitting…"
+                : serviceId
+                  ? "Save changes"
+                  : "Submit service"}
             </Button>
             <ButtonLink href="/vendor/services" variant="outline">
               Cancel

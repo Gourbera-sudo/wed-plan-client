@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { clearApiToken } from "@/lib/api";
 import { authClient } from "@/lib/auth-client";
 
 export function SignOutButton() {
@@ -23,6 +24,7 @@ export function SignOutButton() {
         return;
       }
 
+      clearApiToken();
       router.replace("/sign-in");
       router.refresh();
     } catch {

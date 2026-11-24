@@ -59,6 +59,7 @@ export async function getApiToken(): Promise<string | null> {
 /** Drops the cached JWT — call after sign-out or an unrecoverable 401. */
 export function clearApiToken() {
   cachedToken = null;
+  inflightExchange = null;
 }
 
 type ApiFetchOptions = {

@@ -33,6 +33,7 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { clearApiToken } from "@/lib/api";
 import { authClient } from "@/lib/auth-client";
 import { cn } from "cn";
 
@@ -326,6 +327,7 @@ export function UserMenu({ variant = "desktop", onNavigate }: UserMenuProps) {
         return;
       }
 
+      clearApiToken();
       onNavigate?.();
       router.replace("/sign-in");
       router.refresh();

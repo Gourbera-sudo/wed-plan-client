@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { clearApiToken } from "@/lib/api";
 import { authClient } from "@/lib/auth-client";
 
 type AuthMode = "sign-in" | "sign-up";
@@ -152,6 +153,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
 
   async function handleSocialSignIn(provider: SocialProvider) {
     setError(null);
+    clearApiToken();
     setSocialPending(provider);
 
     try {
@@ -180,6 +182,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
     }
 
     setPending(true);
+    clearApiToken();
 
     try {
       let image: string | undefined;

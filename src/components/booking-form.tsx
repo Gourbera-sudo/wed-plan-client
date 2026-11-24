@@ -2,50 +2,101 @@
 
 import { CheckCircleIcon, LoaderCircleIcon, TriangleAlertIcon } from "lucide-react";
 import Link from "next/link";
-import { useActionState, useEffect, useRef } from "react";
+import { useRef, useState, type FormEvent } from "react";
 
-import {
-  submitBookingRequest,
-  type BookingFormState,
-} from "@/app/actions/bookings";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/toast";
+import { apiFetch } from "@/lib/api";
 
-const INITIAL_STATE: BookingFormState = null;
+type BookingFormState = {
+  ok: boolean;
+  message: string;
+} | null;
 
 type BookingFormProps = {
   serviceId: string;
   minDate: string;
 };
 
-/** Customer booking request form, validated and written by a Server Action. */
+/**
+ * Customer booking request form. All rules (role, ownership, approval, dates,
+ * duplicates) are enforced by the Express API; this form only collects input.
+ */
 export function BookingForm({ serviceId, minDate }: BookingFormProps) {
-  const [state, formAction, pending] = useActionState(
-    submitBookingRequest,
-    INITIAL_STATE,
-  );
   const formRef = useRef<HTMLFormElement>(null);
+  const [state, setState] = useState<BookingFormState>(null);
+  const [pending, setPending] = useState(false);
 
-  useEffect(() => {
-    if (!state) return;
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setState(null);
+    setPending(true);
 
-    toast.add({
-      title: state.ok ? "Request sent" : "Request not sent",
-      description: state.message,
-      type: state.ok ? "success" : "error",
-    });
+    const data = new FormData(event.currentTarget);
+    const eventDate = String(data.get("eventDate") ?? "").trim();
+    const eventLocation = String(data.get("eventLocation") ?? "").trim();
+    const message = String(data.get("message") ?? "").trim();
 
-    if (state.ok) formRef.current?.reset();
-  }, [state]);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(eventDate)) {
+      const failed = { ok: false, message: "Please choose a valid event date." };
+      setState(failed);
+      toast.add({ title: "Request not sent", description: failed.message, type: "error" });
+      setPending(false);
+      return;
+    }
+    if (eventLocation.length < 3 || eventLocation.length > 200) {
+      const failed = {
+        ok: false,
+        message: "Please enter an event location (3–200 characters).",
+      };
+      setState(failed);
+      toast.add({ title: "Request not sent", description: failed.message, type: "error" });
+      setPending(false);
+      return;
+    }
+    if (message.length > 1000) {
+      const failed = { ok: false, message: "Your message must be 1000 characters or fewer." };
+      setState(failed);
+      toast.add({ title: "Request not sent", description: failed.message, type: "error" });
+      setPending(false);
+      return;
+    }
+
+    try {
+      await apiFetch("/api/bookings", {
+        method: "POST",
+        body: {
+          serviceId,
+          eventDate,
+          eventLocation,
+          guests: Number(data.get("guests")) || 0,
+          message,
+        },
+      });
+
+      const success = {
+        ok: true,
+        message: "Request sent. You can follow its status in your dashboard.",
+      };
+      setState(success);
+      formRef.current?.reset();
+      toast.add({ title: "Request sent", description: success.message, type: "success" });
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Could not send your request.";
+      setState({ ok: false, message });
+      toast.add({ title: "Request not sent", description: message, type: "error" });
+    } finally {
+      setPending(false);
+    }
+  }
 
   return (
-    <form ref={formRef} action={formAction} className="space-y-4">
-      <input type="hidden" name="serviceId" value={serviceId} />
-
+    <form ref={formRef} onSubmit={submit} className="space-y-4">
       <div className="space-y-1.5">
         <Label htmlFor="eventDate">Event date</Label>
         <Input
@@ -68,6 +119,18 @@ export function BookingForm({ serviceId, minDate }: BookingFormProps) {
           minLength={3}
           maxLength={200}
           required
+        />
+      </div>
+
+      <div className="space-y-1.5">
+        <Label htmlFor="guests">Estimated guests</Label>
+        <Input
+          id="guests"
+          name="guests"
+          type="number"
+          min={0}
+          max={10000}
+          placeholder="Optional"
         />
       </div>
 
@@ -96,7 +159,7 @@ export function BookingForm({ serviceId, minDate }: BookingFormProps) {
             {state.message}{" "}
             {state.ok ? (
               <Link
-                href="/customer"
+                href="/customer/bookings"
                 className="font-medium underline underline-offset-4"
               >
                 View your bookings

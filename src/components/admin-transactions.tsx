@@ -22,6 +22,10 @@ type Transaction = {
   stripeSessionId?: string;
   method?: string;
   userId: string;
+  vendorId?: string;
+  vendorName?: string;
+  vendorEmail?: string;
+  vendor?: { name?: string; email?: string; image?: string } | null;
   amount: number;
   currency: string;
   status: string;
@@ -136,6 +140,8 @@ export function AdminTransactions() {
         const isUpi = tx.method === "upi" || Boolean(tx.ref);
         const canVerify = isUpi && tx.status === "verifying";
         const pending = busyRef === tx.ref;
+        const vendorName = tx.vendor?.name || tx.vendorName || "WedPlan vendor";
+        const vendorEmail = tx.vendor?.email || tx.vendorEmail;
 
         return (
           <Card key={tx._id}>
@@ -167,7 +173,11 @@ export function AdminTransactions() {
             <CardContent className="flex flex-col gap-3 text-sm sm:flex-row sm:items-center sm:justify-between">
               <div className="space-y-1 text-muted-foreground">
                 <p>
-                  Vendor: <span className="font-mono text-xs">{tx.userId}</span>
+                  Vendor: <span className="font-medium text-foreground">{vendorName}</span>
+                  {vendorEmail ? ` (${vendorEmail})` : ""}
+                </p>
+                <p className="text-xs">
+                  Account: <span className="font-mono">{tx.vendorId || tx.userId}</span>
                 </p>
                 {tx.utr ? <p>UTR: <span className="font-mono text-xs">{tx.utr}</span></p> : null}
                 {tx.verifiedAt ? <p>Reviewed: {when(tx.verifiedAt)}</p> : null}

@@ -14,6 +14,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { toast } from "@/components/ui/toast";
 import { apiFetch } from "@/lib/api";
 
@@ -62,6 +69,7 @@ export function BookingManager({ mode }: { mode: "customer" | "vendor" }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [detailsBooking, setDetailsBooking] = useState<Booking | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -219,9 +227,17 @@ export function BookingManager({ mode }: { mode: "customer" | "vendor" }) {
               <p className="text-xs text-muted-foreground">
                 Requested {dateLabel(booking.createdAt)}
               </p>
-              {booking.status === "pending" ? (
-                <div className="flex flex-wrap gap-2">
-                  {mode === "vendor" ? (
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setDetailsBooking(booking)}
+                >
+                  View details
+                </Button>
+                {booking.status === "pending" ? (
+                  mode === "vendor" ? (
                     <>
                       <Button
                         type="button"
@@ -254,13 +270,83 @@ export function BookingManager({ mode }: { mode: "customer" | "vendor" }) {
                     >
                       Cancel request
                     </Button>
-                  )}
-                </div>
-              ) : null}
+                  )
+                ) : null}
+              </div>
             </CardContent>
           </Card>
         );
       })}
+
+      <Dialog
+        open={detailsBooking !== null}
+        onOpenChange={(open) => {
+          if (!open) setDetailsBooking(null);
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Booking details</DialogTitle>
+            <DialogDescription>
+              {detailsBooking?.serviceName ?? "Selected service"}
+            </DialogDescription>
+          </DialogHeader>
+          {detailsBooking ? (
+            <dl className="grid gap-x-5 gap-y-3 sm:grid-cols-2">
+              <div>
+                <dt className="text-xs text-muted-foreground">Service</dt>
+                <dd className="font-medium">{detailsBooking.serviceName}</dd>
+              </div>
+              <div>
+                <dt className="text-xs text-muted-foreground">Status</dt>
+                <dd className="font-medium">{badgeFor(detailsBooking.status).label}</dd>
+              </div>
+              {mode === "vendor" ? (
+                <div className="sm:col-span-2">
+                  <dt className="text-xs text-muted-foreground">Customer</dt>
+                  <dd className="font-medium">
+                    {detailsBooking.customerName ?? "A customer"}
+                  </dd>
+                  {detailsBooking.customerEmail ? (
+                    <dd className="break-all text-xs text-muted-foreground">
+                      {detailsBooking.customerEmail}
+                    </dd>
+                  ) : null}
+                </div>
+              ) : (
+                <div className="sm:col-span-2">
+                  <dt className="text-xs text-muted-foreground">Vendor</dt>
+                  <dd className="font-medium">
+                    {detailsBooking.vendorName ?? "WedPlan vendor"}
+                  </dd>
+                </div>
+              )}
+              <div>
+                <dt className="text-xs text-muted-foreground">Event date</dt>
+                <dd className="font-medium">{dateLabel(detailsBooking.eventDate)}</dd>
+              </div>
+              <div>
+                <dt className="text-xs text-muted-foreground">Event location</dt>
+                <dd className="font-medium">{detailsBooking.eventLocation}</dd>
+              </div>
+              <div>
+                <dt className="text-xs text-muted-foreground">Guests</dt>
+                <dd className="font-medium">{detailsBooking.guests || "—"}</dd>
+              </div>
+              <div>
+                <dt className="text-xs text-muted-foreground">Requested</dt>
+                <dd className="font-medium">{dateLabel(detailsBooking.createdAt)}</dd>
+              </div>
+              <div className="sm:col-span-2">
+                <dt className="text-xs text-muted-foreground">Customer message</dt>
+                <dd className="rounded-lg bg-muted/40 p-3 text-sm">
+                  {detailsBooking.message || "No message provided."}
+                </dd>
+              </div>
+            </dl>
+          ) : null}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -5,7 +5,6 @@ import { notFound } from "next/navigation";
 import { ButtonLink } from "@/components/button-link";
 import { Reveal } from "@/components/motion-reveal";
 import { ServiceCard } from "@/components/service-card";
-import { requireUser } from "@/lib/auth-guards";
 import { CATEGORY_ICONS } from "@/lib/category-icons";
 import { categoryNameFromSlug } from "@/lib/service-constants";
 import { getServiceCategories, getServicesByCategory } from "@/lib/services";
@@ -26,8 +25,6 @@ export async function generateMetadata({
 export default async function CategoryDetailPage({
   params,
 }: PageProps<"/categories/[slug]">) {
-  await requireUser();
-
   const { slug } = await params;
   const category = categoryNameFromSlug(slug);
   if (!category) notFound();

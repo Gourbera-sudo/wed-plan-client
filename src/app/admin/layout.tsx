@@ -10,6 +10,7 @@ const LINKS = [
   { href: "/admin/users", label: "Manage Users" },
   { href: "/admin/services", label: "Manage Services" },
   { href: "/admin/transactions", label: "Transactions" },
+  { href: "/admin/profile", label: "Profile Settings" },
 ];
 
 export default async function AdminLayout({ children }: { children: ReactNode }) {

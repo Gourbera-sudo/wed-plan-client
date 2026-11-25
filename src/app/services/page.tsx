@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 
 import { ServicesBrowser, type BrowseParams } from "@/components/services-browser";
-import { requireUser } from "@/lib/auth-guards";
 
 export const instant = false;
 
@@ -19,14 +18,10 @@ function firstOf(value: string | string[] | undefined): string {
   return (Array.isArray(value) ? value[0] : value) ?? "";
 }
 
-/**
- * Browse requires an account — guests are redirected to sign in (per the
- * product spec); all filtering happens client-side against the API.
- */
+/** Public catalogue: guests can browse and filter; only details require auth. */
 export default async function ServicesPage({
   searchParams,
 }: PageProps<"/services">) {
-  await requireUser();
   const query = await searchParams;
 
   const sortParam = firstOf(query.sort);

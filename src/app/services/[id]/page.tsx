@@ -3,6 +3,7 @@ import {
   ArrowLeftIcon,
   BadgeCheckIcon,
   CalendarDaysIcon,
+  MapPinIcon,
   ShieldCheckIcon,
   TriangleAlertIcon,
 } from "lucide-react";
@@ -170,6 +171,15 @@ export default async function ServiceDetailsPage({
           />
           Approved by WedPlan
         </p>
+        {service.location ? (
+          <p className="mt-1 flex items-center gap-1.5 text-muted-foreground">
+            <MapPinIcon
+              className="size-4 shrink-0 text-primary"
+              aria-hidden="true"
+            />
+            {service.location}
+          </p>
+        ) : null}
       </header>
 
       <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)] lg:gap-10">

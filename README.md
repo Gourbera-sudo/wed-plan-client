@@ -8,18 +8,18 @@ Role-based wedding planning platform. Couples browse and book wedding services, 
 
 ## Important features
 
-- Public, role-aware browsing: search by name, filter by category/location, sort by price, with loading and empty states.
+- Public, role-aware browsing: guests can search by name, filter by category/location, sort by price, and open category pages; service details and booking require sign-in.
 - Better Auth email/password and Google/GitHub sign-in, role selection at sign-up, blocked-account lockout, and role-specific dashboards guarded on the server.
 - Vendor listing CRUD with availability controls, pending admin review, a 3-active-listing free cap, and booking-request accept/reject.
-- Customer booking requests with duplicate/self-booking rules written through the Express API and trackable status.
-- Admin user management (search, filter, details, block/unblock), service moderation (approve/reject/pause/delete), stats, and a view-only transaction ledger.
-- Premium subscriptions via Stripe Checkout (signature-verified webhook activation) and UPI (admin verification only). Expired premium automatically falls back to the free plan.
+- Customer booking requests with duplicate/self-booking rules written through the Express API, trackable status, and a full-details dialog.
+- Admin user management (detail view, block/unblock, role and business-name changes — no plan grants), service moderation (approve/reject/pause/delete), stats, and a transaction ledger with vendor identity and UPI verification.
+- Premium subscriptions via vendor-only Stripe Checkout (idempotent, signature-verified webhook activation; refunds and cancellations revoke access) and UPI (admin verification only). Expired premium automatically falls back to the free plan.
 - ImgBB image uploads through server-side proxy endpoints; no API keys are exposed to the browser.
+- Reusable Base UI/shadcn primitives for accessible dialogs and destructive confirmations, plus custom 404 and error pages.
 
 ## Technology stack
 
 Next.js 16 App Router, React 19, TypeScript (strict), Tailwind CSS 4, shadcn base-nova primitives on Base UI, Better Auth, MongoDB, Motion, and an Express + MongoDB REST API with JWT authorization and Stripe.
-
 
 ## Getting started
 
@@ -70,11 +70,11 @@ The API smoke suite lives in the server repository (`cd ../wedplan-server && npm
 
 | Area | Routes | Access |
 | --- | --- | --- |
-| Public | `/`, `/services`, `/sign-in`, `/sign-up` | Everyone (browse requires sign-in) |
-| Private | `/dashboard`, `/profile`, `/categories/[slug]`, `/payment/success`, `/payment/cancel` | Signed-in users |
+| Public | `/`, `/services`, `/categories/[slug]`, `/sign-in`, `/sign-up` | Everyone; service details and booking still require sign-in |
+| Private | `/dashboard`, `/profile`, `/payment/success`, `/payment/cancel` | Signed-in users |
 | Customer | `/customer`, `/customer/bookings`, `/customer/profile` | `customer` |
 | Vendor | `/vendor`, `/vendor/services`, `/vendor/services/new`, `/vendor/services/[id]/edit`, `/vendor/bookings`, `/vendor/subscription`, `/vendor/profile` | `vendor` |
-| Admin | `/admin`, `/admin/users`, `/admin/services`, `/admin/transactions` | `admin` |
+| Admin | `/admin`, `/admin/users`, `/admin/services`, `/admin/transactions`, `/admin/profile` | `admin` |
 
 Role layouts call `requireRole(...)` on the server; a user who edits the URL into another role's area is redirected to `/unauthorized`. Blocked accounts are rejected by both the client guard and every protected API route.
 
@@ -82,10 +82,10 @@ Role layouts call `requireRole(...)` on the server; a user who edits the URL int
 
 Vendors can pay for Premium two ways:
 
-- **Card (Stripe test mode):** checkout redirects back to the client, but activation happens only in the signature-verified webhook after Stripe reports the payment as paid. `/payment/success` reads `/api/payments/status` to show the verified state instead of trusting the redirect.
+- **Card (Stripe test mode):** checkout redirects back to the client, but activation happens only in the signature-verified webhook after Stripe reports the payment as paid. `/payment/success` reads `/api/payments/status` to show the verified state instead of trusting the redirect. Webhook redeliveries are idempotent, and refunds/disputes/cancellations revoke Premium.
 - **UPI:** the server creates a pending order with a QR/deep link, the vendor submits the UTR, and an admin approves it in `/admin/transactions`. Only that authenticated admin action activates Premium. Success redirects and polling never change the plan.
 
-Premium runs for 30 days. The API treats an expired `subscriptionExpiresAt` as the free plan (the 3-listing cap applies again); admin-granted premium without an expiry stays active until changed. Configure `UPI_VPA` (and optionally `UPI_PAYEE_NAME`, `UPI_MONTHLY_PAISE` in paise) on the server to enable UPI.
+Premium runs for 30 days. Only a verified Stripe webhook or an authenticated admin UPI verification can grant it; expired plans fall back to the free-plan limit (the 3-listing cap applies again). Configure `UPI_VPA` (and optionally `UPI_PAYEE_NAME`, `UPI_MONTHLY_PAISE` in paise) on the server to enable UPI.
 
 ## Deployment
 

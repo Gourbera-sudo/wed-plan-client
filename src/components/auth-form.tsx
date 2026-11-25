@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { toast } from "@/components/ui/toast";
 import { clearApiToken } from "@/lib/api";
 import { authClient } from "@/lib/auth-client";
 
@@ -224,6 +225,15 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
         setError(result.error.message ?? "Something went wrong. Please try again.");
         return;
       }
+
+      toast.add({
+        title: mode === "sign-up" ? "Account created" : "Welcome back",
+        description:
+          mode === "sign-up"
+            ? "Your WedPlan account is ready."
+            : "You are signed in to WedPlan.",
+        type: "success",
+      });
 
       const signedInRole = (result.data?.user as { role?: string } | undefined)
         ?.role;

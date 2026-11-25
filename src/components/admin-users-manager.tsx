@@ -42,7 +42,6 @@ type ManagedUser = {
 
 type UserRow = ManagedUser & {
   draftRole: "customer" | "vendor" | "admin";
-  draftPlan: "free" | "premium";
   draftBusiness: string;
 };
 
@@ -61,7 +60,6 @@ function toRow(user: ManagedUser): UserRow {
   return {
     ...user,
     draftRole: user.role,
-    draftPlan: user.subscriptionPlan ?? "free",
     draftBusiness: user.businessName ?? "",
   };
 }
@@ -72,7 +70,7 @@ function joinedLabel(value?: string) {
   return Number.isNaN(date.getTime()) ? "—" : date.toLocaleDateString("en-IN");
 }
 
-/** Admin-only account management: search, details, roles, blocking, and plans. */
+/** Admin-only account management: search, details, roles, and blocking. */
 export function AdminUsersManager({ currentUserId }: { currentUserId: string }) {
   const [users, setUsers] = useState<UserRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -152,7 +150,6 @@ export function AdminUsersManager({ currentUserId }: { currentUserId: string }) 
           method: "PATCH",
           body: {
             role: user.draftRole,
-            subscriptionPlan: user.draftPlan,
             businessName: user.draftBusiness,
           },
         },
@@ -341,7 +338,7 @@ export function AdminUsersManager({ currentUserId }: { currentUserId: string }) 
                 ) : null}
 
                 <CardContent className="space-y-4">
-                  <div className="grid gap-3 sm:grid-cols-3">
+                  <div className="grid gap-3 sm:grid-cols-2">
                     <div className="space-y-1">
                       <Label htmlFor={`role-${user._id}`}>Role</Label>
                       <select
@@ -363,22 +360,6 @@ export function AdminUsersManager({ currentUserId }: { currentUserId: string }) 
                           Your own role is fixed.
                         </p>
                       ) : null}
-                    </div>
-                    <div className="space-y-1">
-                      <Label htmlFor={`plan-${user._id}`}>Plan</Label>
-                      <select
-                        id={`plan-${user._id}`}
-                        value={user.draftPlan}
-                        onChange={(event) =>
-                          updateRow(user._id, {
-                            draftPlan: event.target.value as UserRow["draftPlan"],
-                          })
-                        }
-                        className="flex h-9 w-full rounded-lg border border-input bg-transparent px-3 py-1 text-sm shadow-sm outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
-                      >
-                        <option value="free">Free</option>
-                        <option value="premium">Premium</option>
-                      </select>
                     </div>
                     <div className="space-y-1">
                       <Label htmlFor={`business-${user._id}`}>Business name</Label>

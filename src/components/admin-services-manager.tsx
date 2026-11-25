@@ -14,6 +14,16 @@ import { useEffect, useMemo, useState } from "react";
 
 import { revalidateServices } from "@/app/actions/revalidate";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -84,6 +94,7 @@ export function AdminServicesManager() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<ManagedService | null>(null);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("all");
   const [stateFilter, setStateFilter] = useState("all");
@@ -187,13 +198,6 @@ export function AdminServicesManager() {
   }
 
   async function remove(service: ManagedService) {
-    if (
-      !window.confirm(
-        `Delete "${service.name}"? This removes the listing permanently.`,
-      )
-    ) {
-      return;
-    }
     setBusyId(service._id);
     setError(null);
     try {
@@ -219,8 +223,9 @@ export function AdminServicesManager() {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="grid gap-3 rounded-xl bg-secondary/50 p-4 sm:grid-cols-3">
+    <>
+      <div className="space-y-4">
+        <div className="grid gap-3 rounded-xl bg-secondary/50 p-4 sm:grid-cols-3">
         <div className="space-y-1.5">
           <Label htmlFor="admin-service-search">Search services</Label>
           <div className="relative">
@@ -374,7 +379,7 @@ export function AdminServicesManager() {
                       size="sm"
                       variant="destructive"
                       disabled={busy}
-                      onClick={() => void remove(service)}
+                      onClick={() => setDeleteTarget(service)}
                     >
                       <Trash2Icon className="size-4" aria-hidden="true" />
                       Delete
@@ -386,6 +391,37 @@ export function AdminServicesManager() {
           })}
         </div>
       )}
-    </div>
+      </div>
+      <AlertDialog
+        open={deleteTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this service?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {deleteTarget
+                ? `"${deleteTarget.name}" will be permanently removed from WedPlan.`
+                : ""}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel type="button">Keep service</AlertDialogCancel>
+            <AlertDialogAction
+              type="button"
+              disabled={busyId !== null}
+              onClick={() => {
+                if (deleteTarget) void remove(deleteTarget);
+                setDeleteTarget(null);
+              }}
+            >
+              Delete service
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }

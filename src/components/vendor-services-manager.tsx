@@ -13,6 +13,16 @@ import { useEffect, useState } from "react";
 import { revalidateServices } from "@/app/actions/revalidate";
 import { ButtonLink } from "@/components/button-link";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -60,6 +70,7 @@ export function VendorServicesManager() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<ManagedService | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -114,7 +125,6 @@ export function VendorServicesManager() {
   }
 
   async function remove(service: ManagedService) {
-    if (!window.confirm(`Delete "${service.name}"? This cannot be undone.`)) return;
     setBusyId(service._id);
     setError(null);
     try {
@@ -161,8 +171,9 @@ export function VendorServicesManager() {
   }
 
   return (
-    <div className="space-y-3">
-      {services.map((service) => {
+    <>
+      <div className="space-y-3">
+        {services.map((service) => {
         const status = statusOf(service);
         const cover = service.images?.[0] ?? service.image;
         const busy = busyId === service._id;
@@ -227,7 +238,7 @@ export function VendorServicesManager() {
                   variant="destructive"
                   size="sm"
                   disabled={busy}
-                  onClick={() => void remove(service)}
+                  onClick={() => setDeleteTarget(service)}
                 >
                   {busy ? (
                     <LoaderCircleIcon className="size-4 animate-spin" aria-hidden="true" />
@@ -240,7 +251,38 @@ export function VendorServicesManager() {
             </CardContent>
           </Card>
         );
-      })}
-    </div>
+        })}
+      </div>
+      <AlertDialog
+        open={deleteTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this service?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {deleteTarget
+                ? `"${deleteTarget.name}" will be permanently removed. This cannot be undone.`
+                : ""}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel type="button">Keep service</AlertDialogCancel>
+            <AlertDialogAction
+              type="button"
+              disabled={busyId !== null}
+              onClick={() => {
+                if (deleteTarget) void remove(deleteTarget);
+                setDeleteTarget(null);
+              }}
+            >
+              Delete service
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }

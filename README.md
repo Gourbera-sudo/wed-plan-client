@@ -4,7 +4,8 @@ Role-based wedding planning platform. Couples browse and book wedding services, 
 
 - **Client repository:** <https://github.com/Gourbera-sudo/wed-plan-client.git> — this repository.
 - **Server repository:** <https://github.com/Gourbera-sudo/wedplan-server.git>
-- **Live website:** add the deployed client URL here after deployment (for example `https://wedplan.vercel.app`). The API health check must be reachable at `<API_URL>/api/health`.
+- **Live website:** <https://wedplan-client-brown.vercel.app>
+- **Live API health check:** <https://wedplan-server-teal.vercel.app/api/health>
 
 ## Important features
 
@@ -45,6 +46,7 @@ npm start               # http://localhost:8000
 | --- | --- |
 | `MONGODB_URI` | Shared MongoDB connection (Better Auth + cached service reads) |
 | `BETTER_AUTH_URL`, `BETTER_AUTH_SECRET` | Session cookies |
+| `JWT_SECRET` | Signs the same-origin API JWT used by browser API calls |
 | `GOOGLE_CLIENT_ID/SECRET`, `GITHUB_CLIENT_ID/SECRET` | Optional social sign-in |
 | `ADMIN_EMAILS`, `VENDOR_EMAILS` | Comma-separated emails promoted on sign-up; admin cannot be self-assigned |
 | `IMGBB_API_KEY` | Server-side image uploads via `/api/upload/image` |
@@ -89,6 +91,8 @@ Premium runs for 30 days. Only a verified Stripe webhook or an authenticated adm
 
 ## Deployment
 
-Deploy the client (e.g. Vercel) with all client env vars set, and host the Express API separately with its own env vars. Set `CLIENT_URL` to the deployed client origin and `NEXT_PUBLIC_API_URL` to the deployed API origin so there are no mixed-origin 404s or CORS errors. Register the Stripe webhook against `https://<api-host>/api/payments/webhook` with `STRIPE_WEBHOOK_SECRET`, and use a reachable `UPI_VPA`. After moderation or listing changes the public cached listings are expired through the `revalidateServices` server action.
+The live client is deployed on Vercel as `wedplan-client` with the Next.js preset, Function Region `iad1`, and Deployment Protection disabled. The production `NEXT_PUBLIC_API_URL` is `https://wedplan-server-teal.vercel.app`; the API's `CLIENT_URL` is this live client origin. `MONGODB_URI`, `JWT_SECRET`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `ADMIN_EMAILS`, and `VENDOR_EMAILS` are set in the Vercel project. Google/GitHub and ImgBB credentials are optional in this demo; without them those features stay hidden or return a clear `503`.
 
-Before going live, verify every role dashboard survives a hard refresh, sign out and back in as each demo role, and complete one Stripe test checkout plus one UPI verification. Record the deployed client URL at the top of this README and the API URL in the server README.
+The browser signs in with Better Auth on the client domain. The same-origin `/api/auth/token` route reads that session and signs a short-lived HS256 JWT with the shared `JWT_SECRET`; the Express API verifies that JWT, so authentication survives cross-domain hosting and hard refreshes. Register the Stripe webhook at `https://wedplan-server-teal.vercel.app/api/payments/webhook` with `STRIPE_WEBHOOK_SECRET`, and set a reachable `UPI_VPA` to enable UPI. After moderation or listing changes, the cached public listings are expired through the `revalidateServices` server action.
+
+To reproduce the deployment, create a Vercel project for this repo, set the env vars above, keep the region at `iad1` (same as the API and MongoDB egress), then run `vercel --prod`. Verify the home page, `/services`, `/categories/wedding-venues`, a hard-refreshed role dashboard, and `/api/auth/token` (which should return `401` for guests).

@@ -1,10 +1,11 @@
 /**
  * Browser-side wrapper for the wedplan-server API.
  *
- * Better Auth owns sign-in (session cookie), so before the first call we
- * exchange that cookie for a short-lived API JWT (`POST /api/auth/token`) and
- * attach it as `Authorization: Bearer …`. The token is cached in memory for
- * just under its 1h lifetime and re-exchanged automatically on 401.
+ * Better Auth owns sign-in (session cookie), so the same-origin
+ * `/api/auth/token` route exchanges it for a short-lived API JWT. That JWT is
+ * attached as `Authorization: Bearer …`, so it works even when the Express API
+ * is hosted on a different domain. The token is cached in memory for just
+ * under its 1h lifetime and re-exchanged automatically on 401.
  */
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
@@ -29,7 +30,7 @@ let inflightExchange: Promise<string | null> | null = null;
 
 async function exchangeSession(): Promise<string | null> {
   try {
-    const res = await fetch(`${API_URL}/api/auth/token`, {
+    const res = await fetch("/api/auth/token", {
       method: "POST",
       credentials: "include",
     });

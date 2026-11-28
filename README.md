@@ -1,13 +1,20 @@
 # WedPlan — Wedding Planning Platform
 
-Role-based wedding planning platform. Couples browse and book wedding services, vendors manage listings and requests, and admins moderate the marketplace.
+## Project Name and Description
+
+**Project name:** WedPlan — Wedding Planning Platform. A role-based wedding planning platform where couples browse and book wedding services, vendors manage listings and booking requests, and admins moderate the marketplace.
+
+## Live Website Link
+
+- **Client:** <https://wedplan-client-brown.vercel.app>
+- **API health check:** <https://wedplan-server-teal.vercel.app/api/health>
+
+## Client and Server Repository Links
 
 - **Client repository:** <https://github.com/Gourbera-sudo/wed-plan-client.git> — this repository.
 - **Server repository:** <https://github.com/Gourbera-sudo/wedplan-server.git>
-- **Live website:** <https://wedplan-client-brown.vercel.app>
-- **Live API health check:** <https://wedplan-server-teal.vercel.app/api/health>
 
-## Important features
+## Important Features
 
 - Public, role-aware browsing: guests can search by name, filter by category/location, sort by price, and open category pages; service details and booking require sign-in.
 - Better Auth email/password and Google/GitHub sign-in, role selection at sign-up, blocked-account lockout, and role-specific dashboards guarded on the server.
@@ -18,29 +25,35 @@ Role-based wedding planning platform. Couples browse and book wedding services, 
 - ImgBB image uploads through server-side proxy endpoints; no API keys are exposed to the browser.
 - Reusable Base UI/shadcn primitives for accessible dialogs and destructive confirmations, plus custom 404 and error pages.
 
-## Technology stack
+## Technology Stack
 
 Next.js 16 App Router, React 19, TypeScript (strict), Tailwind CSS 4, shadcn base-nova primitives on Base UI, Better Auth, MongoDB, Motion, and an Express + MongoDB REST API with JWT authorization and Stripe.
 
-## Getting started
+## Installation Instructions
 
 Requires Node.js 20+ and a MongoDB connection (local or Atlas).
 
-```bash
-# Client
-cp .env.example .env
-npm install
-npm run dev             # http://localhost:3000
+### 1. Clone and install dependencies
 
-# API (in ../wedplan-server)
-cp .env.example .env
+```bash
+git clone https://github.com/Gourbera-sudo/wed-plan-client.git wedplan-client
+cd wedplan-client
 npm install
-npm start               # http://localhost:8000
+
+git clone https://github.com/Gourbera-sudo/wedplan-server.git ../wedplan-server
+cd ../wedplan-server
+npm install
 ```
 
-`JWT_SECRET` and `BETTER_AUTH_SECRET` must have the same value in both `.env` files so each service can verify the other's tokens. `CLIENT_URL` on the server must match the client origin for CORS and Stripe redirects.
+### 2. Configure environment
 
-### Client environment
+```bash
+cp .env.example .env   # run this in both repositories
+```
+
+`JWT_SECRET` and `BETTER_AUTH_SECRET` must have the same value in both `.env` files so each service can verify the other's tokens. `CLIENT_URL` on the server must match the client origin (`http://localhost:3000` locally) for CORS and Stripe redirects.
+
+#### Client environment
 
 | Variable | Purpose |
 | --- | --- |
@@ -53,9 +66,35 @@ npm start               # http://localhost:8000
 | `IMGBB_API_KEY` | Server-side image uploads via `/api/upload/image` |
 | `NEXT_PUBLIC_API_URL` | Express API origin (default `http://localhost:8000`) |
 
-### Server environment
+#### Server environment
 
 `MONGODB_URI`, `JWT_SECRET`, and `BETTER_AUTH_SECRET` are required. Optional: `PORT`, `CLIENT_URL`, `JWT_EXPIRES_IN`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `IMGBB_API_KEY`, `UPI_VPA`, `UPI_PAYEE_NAME`, `UPI_MONTHLY_PAISE`.
+
+## How to Run the Project Locally
+
+Start the API first, then the client in a second terminal:
+
+```bash
+# Terminal 1 — API
+cd ../wedplan-server
+npm start               # http://localhost:8000
+
+# Terminal 2 — client
+cd ../wedplan-client
+npm run dev             # http://localhost:3000
+```
+
+Optional demo data:
+
+```bash
+# In the server repository — repeatable demo users/services
+node scripts/seed.js
+
+# In the client repository — curated homepage listings
+npm run seed:services
+```
+
+Open <http://localhost:3000> and sign in with one of these demo accounts (password `Wedplan1!`): `admin@wedplan.test`, `vendor@wedplan.test`, `vendor2@wedplan.test`, `customer@wedplan.test`. `blocked@wedplan.test` is intentionally blocked.
 
 ## Scripts
 

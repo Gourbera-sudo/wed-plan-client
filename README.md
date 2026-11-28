@@ -45,7 +45,8 @@ npm start               # http://localhost:8000
 | Variable | Purpose |
 | --- | --- |
 | `MONGODB_URI` | Shared MongoDB connection (Better Auth + cached service reads) |
-| `BETTER_AUTH_URL`, `BETTER_AUTH_SECRET` | Session cookies |
+| `BETTER_AUTH_URL`, `BETTER_AUTH_SECRET` | Session cookies and Better Auth base URL |
+| `BETTER_AUTH_TRUSTED_ORIGINS` | Comma-separated browser origins Better Auth accepts (must include the deployed client origin) |
 | `JWT_SECRET` | Signs the same-origin API JWT used by browser API calls |
 | `GOOGLE_CLIENT_ID/SECRET`, `GITHUB_CLIENT_ID/SECRET` | Optional social sign-in |
 | `ADMIN_EMAILS`, `VENDOR_EMAILS` | Comma-separated emails promoted on sign-up; admin cannot be self-assigned |
@@ -91,7 +92,7 @@ Premium runs for 30 days. Only a verified Stripe webhook or an authenticated adm
 
 ## Deployment
 
-The live client is deployed on Vercel as `wedplan-client` with the Next.js preset, Function Region `iad1`, and Deployment Protection disabled. The production `NEXT_PUBLIC_API_URL` is `https://wedplan-server-teal.vercel.app`; the API's `CLIENT_URL` is this live client origin. `MONGODB_URI`, `JWT_SECRET`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `ADMIN_EMAILS`, and `VENDOR_EMAILS` are set in the Vercel project. Google/GitHub and ImgBB credentials are optional in this demo; without them those features stay hidden or return a clear `503`.
+The live client is deployed on Vercel as `wedplan-client` with the Next.js preset, Function Region `iad1`, and Deployment Protection disabled. The production `NEXT_PUBLIC_API_URL` is `https://wedplan-server-teal.vercel.app`; the API's `CLIENT_URL` is this live client origin. `MONGODB_URI`, `JWT_SECRET`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `BETTER_AUTH_TRUSTED_ORIGINS`, `ADMIN_EMAILS`, and `VENDOR_EMAILS` are set in the Vercel project. `BETTER_AUTH_TRUSTED_ORIGINS` must include the deployed client origin, otherwise browsers receive `Invalid origin` on sign-in/sign-up. Google/GitHub and ImgBB credentials are optional in this demo; without them those features stay hidden or return a clear `503`.
 
 The browser signs in with Better Auth on the client domain. The same-origin `/api/auth/token` route reads that session and signs a short-lived HS256 JWT with the shared `JWT_SECRET`; the Express API verifies that JWT, so authentication survives cross-domain hosting and hard refreshes. Register the Stripe webhook at `https://wedplan-server-teal.vercel.app/api/payments/webhook` with `STRIPE_WEBHOOK_SECRET`, and set a reachable `UPI_VPA` to enable UPI. After moderation or listing changes, the cached public listings are expired through the `revalidateServices` server action.
 
